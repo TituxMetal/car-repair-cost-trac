@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Vehicle, MaintenanceEvent, Expense, Budget } from '@/lib/types'
-import { generateId } from '@/lib/helpers'
+import { generateId, createDefaultWeeklyChecks } from '@/lib/helpers'
 import { Toaster, toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -29,9 +29,19 @@ function App() {
   const [dialogMode, setDialogMode] = useState<DialogMode>({ type: 'none' })
 
   const handleSaveVehicle = (updatedVehicle: Vehicle) => {
+    const isNewVehicle = !vehicle
     setVehicle(updatedVehicle)
+    
+    // Create default weekly checks for new vehicles
+    if (isNewVehicle) {
+      const weeklyChecks = createDefaultWeeklyChecks(updatedVehicle.id)
+      setMaintenanceEvents(current => [...(current || []), ...weeklyChecks])
+      toast.success('Vehicle saved with weekly maintenance checks')
+    } else {
+      toast.success('Vehicle saved successfully')
+    }
+    
     setDialogMode({ type: 'none' })
-    toast.success('Vehicle saved successfully')
   }
 
   const handleSaveMaintenanceEvent = (event: MaintenanceEvent) => {

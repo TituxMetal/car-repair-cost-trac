@@ -14,6 +14,11 @@ export interface Vehicle {
 export type MaintenanceCategory = 
   | 'oil-change'
   | 'oil-level-check'
+  | 'tire-pressure-check'
+  | 'coolant-level-check'
+  | 'brake-fluid-check'
+  | 'windshield-washer-check'
+  | 'lights-check'
   | 'tires'
   | 'brakes'
   | 'battery'

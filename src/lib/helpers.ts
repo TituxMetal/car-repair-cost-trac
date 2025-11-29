@@ -1,8 +1,13 @@
-import { MaintenanceCategory } from './types'
+import { MaintenanceCategory, MaintenanceEvent } from './types'
 
 export const maintenanceCategoryLabels: Record<MaintenanceCategory, string> = {
   'oil-change': 'Oil Change',
   'oil-level-check': 'Oil Level Check',
+  'tire-pressure-check': 'Tire Pressure Check',
+  'coolant-level-check': 'Coolant Level Check',
+  'brake-fluid-check': 'Brake Fluid Check',
+  'windshield-washer-check': 'Windshield Washer Fluid',
+  'lights-check': 'Lights Check',
   'tires': 'Tires',
   'brakes': 'Brakes',
   'battery': 'Battery',
@@ -10,6 +15,71 @@ export const maintenanceCategoryLabels: Record<MaintenanceCategory, string> = {
   'fluids': 'Fluids',
   'inspection': 'Inspection',
   'other': 'Other'
+}
+
+export interface WeeklyCheckDefinition {
+  category: MaintenanceCategory
+  title: string
+  description: string
+}
+
+export const defaultWeeklyChecks: WeeklyCheckDefinition[] = [
+  {
+    category: 'oil-level-check',
+    title: 'Weekly Oil Level Check',
+    description: 'Check engine oil level to prevent engine damage from low oil. Top up if below minimum mark.'
+  },
+  {
+    category: 'tire-pressure-check',
+    title: 'Weekly Tire Pressure Check',
+    description: 'Check tire pressure when cold. Proper pressure improves fuel efficiency and tire longevity.'
+  },
+  {
+    category: 'coolant-level-check',
+    title: 'Weekly Coolant Level Check',
+    description: 'Check coolant reservoir level. Low coolant can cause engine overheating.'
+  },
+  {
+    category: 'brake-fluid-check',
+    title: 'Weekly Brake Fluid Check',
+    description: 'Check brake fluid level in reservoir. Low fluid may indicate brake wear or leaks.'
+  },
+  {
+    category: 'windshield-washer-check',
+    title: 'Weekly Washer Fluid Check',
+    description: 'Check and refill windshield washer fluid for clear visibility.'
+  },
+  {
+    category: 'lights-check',
+    title: 'Weekly Lights Check',
+    description: 'Test all lights: headlights, brake lights, turn signals, and reverse lights.'
+  }
+]
+
+export const createDefaultWeeklyChecks = (vehicleId: string): MaintenanceEvent[] => {
+  const now = new Date()
+  // Schedule first check for next week
+  const nextWeek = new Date(now)
+  nextWeek.setDate(nextWeek.getDate() + 7)
+  const scheduledDate = nextWeek.toISOString().split('T')[0]
+
+  return defaultWeeklyChecks.map((check, index) => ({
+    id: generateId() + `-${index}`,
+    vehicleId,
+    category: check.category,
+    type: 'weekly-check' as const,
+    title: check.title,
+    description: check.description,
+    scheduledDate,
+    scheduledMileage: undefined,
+    completedDate: '',
+    completedMileage: undefined,
+    status: 'scheduled' as const,
+    appointmentTime: '',
+    appointmentPlace: '',
+    appointmentReason: '',
+    createdAt: now.toISOString()
+  }))
 }
 
 export const formatCurrency = (amount: number): string => {
