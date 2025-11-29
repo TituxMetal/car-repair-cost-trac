@@ -28,7 +28,12 @@ dist-ssr
 **/agent-eval-report*
 packages
 pids
+
+# Prisma
+prisma/dev.db
+prisma/dev.db-journal
 .file-manifest
 .devcontainer/
 
 .spark-workbench-id
+generated/

@@ -7,8 +7,8 @@ A proactive car maintenance and cost tracking application that helps vehicle own
 2. **Proactive** - Visual cues and upcoming maintenance lists help users stay ahead of vehicle needs
 3. **Empowering** - Clear budget tracking and cost analysis help users make informed decisions about vehicle maintenance
 
-**Complexity Level**: Light Application (multiple features with basic state)
-The app manages persistent vehicle data, maintenance schedules, and expense tracking with multiple interconnected views, but doesn't require advanced features like real-time sync or user accounts.
+**Complexity Level**: Medium Application (multiple features with moderate state complexity)
+The app manages persistent vehicle data, maintenance schedules, recurring reminders, and expense tracking with multiple interconnected views, requiring state coordination between reminders and auto-generated events, budget calculations, and historical data analysis.
 
 ## Essential Features
 
