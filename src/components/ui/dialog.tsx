@@ -55,13 +55,13 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "bg-card data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl border border-border/50 p-0 shadow-2xl duration-200 sm:max-w-lg",
+          "bg-card data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-md border-2 border-border p-0 shadow-2xl duration-200 sm:max-w-lg",
           className
         )}
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="ring-offset-background focus:ring-ring hover:bg-accent/10 hover:text-foreground absolute top-6 right-6 rounded-md p-2 transition-all focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none bg-secondary/80 text-secondary-foreground">
+        <DialogPrimitive.Close className="absolute top-4 right-4 rounded-md p-2 transition-all cursor-pointer bg-secondary hover:bg-destructive text-foreground hover:text-white border-2 border-border hover:border-destructive focus:outline-2 focus:outline-offset-2 focus:outline-ring disabled:pointer-events-none shadow-sm hover:shadow-md">
           <XIcon className="size-5" />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>

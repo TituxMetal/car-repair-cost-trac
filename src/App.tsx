@@ -205,7 +205,7 @@ function App() {
               {vehiclesError instanceof Error ? vehiclesError.message : 'Unknown error'}
             </p>
           </div>
-          <div className="bg-card border border-border rounded-xl shadow-lg">
+          <div className="bg-card border-2 border-border rounded-md shadow-lg">
             <VehicleForm onSave={handleSaveVehicle} />
           </div>
         </div>
@@ -226,7 +226,7 @@ function App() {
               Start by adding your vehicle to track maintenance and costs
             </p>
           </div>
-          <div className="bg-card border border-border rounded-xl shadow-lg">
+          <div className="bg-card border-2 border-border rounded-md shadow-lg">
             <VehicleForm onSave={handleSaveVehicle} />
           </div>
         </div>
