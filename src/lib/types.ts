@@ -13,6 +13,7 @@ export interface Vehicle {
 
 export type MaintenanceCategory = 
   | 'oil-change'
+  | 'oil-level-check'
   | 'tires'
   | 'brakes'
   | 'battery'
@@ -21,7 +22,7 @@ export type MaintenanceCategory =
   | 'inspection'
   | 'other'
 
-export type MaintenanceType = 'service' | 'part-replacement' | 'mileage-check' | 'date-check'
+export type MaintenanceType = 'service' | 'part-replacement' | 'mileage-check' | 'date-check' | 'weekly-check'
 
 export type MaintenanceStatus = 'scheduled' | 'completed' | 'overdue'
 

@@ -2,6 +2,7 @@ import { MaintenanceCategory } from './types'
 
 export const maintenanceCategoryLabels: Record<MaintenanceCategory, string> = {
   'oil-change': 'Oil Change',
+  'oil-level-check': 'Oil Level Check',
   'tires': 'Tires',
   'brakes': 'Brakes',
   'battery': 'Battery',

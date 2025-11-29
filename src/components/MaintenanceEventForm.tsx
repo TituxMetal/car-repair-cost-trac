@@ -100,6 +100,7 @@ export const MaintenanceEventForm = ({ vehicleId, event, onSave, onCancel }: Mai
                   <SelectItem value="part-replacement">Part Replacement</SelectItem>
                   <SelectItem value="mileage-check">Mileage Check</SelectItem>
                   <SelectItem value="date-check">Date Check</SelectItem>
+                  <SelectItem value="weekly-check">Weekly Check</SelectItem>
                 </SelectContent>
               </Select>
             </div>
