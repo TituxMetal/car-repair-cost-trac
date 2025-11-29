@@ -1,6 +1,20 @@
 import { Vehicle, MaintenanceEvent, Expense, Budget } from './types'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+// Use relative path - Vite proxy will forward /api to the backend
+const API_BASE = '/api'
+
+// Custom error class to include validation details
+export class ApiError extends Error {
+  status: number
+  details?: Record<string, string[]>
+  
+  constructor(message: string, status: number, details?: Record<string, string[]>) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.details = details
+  }
+}
 
 async function fetchApi<T>(
   endpoint: string,
@@ -15,8 +29,23 @@ async function fetchApi<T>(
   })
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }))
-    throw new Error(error.error || `HTTP ${response.status}`)
+    const errorBody = await response.json().catch(() => ({ error: 'Unknown error' }))
+    
+    // Extract validation errors if present
+    if (errorBody.success === false && errorBody.error?.issues) {
+      const details: Record<string, string[]> = {}
+      for (const issue of errorBody.error.issues) {
+        const path = issue.path.join('.') || 'general'
+        if (!details[path]) details[path] = []
+        details[path].push(issue.message)
+      }
+      throw new ApiError('Validation failed', response.status, details)
+    }
+    
+    throw new ApiError(
+      errorBody.error || errorBody.message || `HTTP ${response.status}`,
+      response.status
+    )
   }
 
   return response.json()

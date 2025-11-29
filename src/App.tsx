@@ -1,11 +1,26 @@
 import { useState } from 'react'
-import { useKV } from '@github/spark/hooks'
-import { Vehicle, MaintenanceEvent, Expense, Budget, RecurringReminder } from '@/lib/types'
-import { generateId, createDefaultWeeklyChecks } from '@/lib/helpers'
-import { useRecurringReminders, updateReminderAfterCompletion } from '@/hooks/use-recurring-reminders'
+import { Vehicle, MaintenanceEvent, Expense, Budget } from '@/lib/types'
+import { defaultWeeklyChecks } from '@/lib/helpers'
+import { ApiError } from '@/lib/api'
+import {
+  useVehicles,
+  useCreateVehicle,
+  useUpdateVehicle,
+  useMaintenanceEvents,
+  useCreateMaintenanceEvent,
+  useCreateMaintenanceEventsBulk,
+  useUpdateMaintenanceEvent,
+  useMarkMaintenanceComplete,
+  useExpenses,
+  useExpenseStats,
+  useCreateExpense,
+  useUpdateExpense,
+  useBudget,
+  useCreateOrUpdateBudget,
+} from '@/hooks/use-api'
 import { Toaster, toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { VehicleForm } from '@/components/VehicleForm'
 import { VehicleProfile } from '@/components/VehicleProfile'
@@ -14,150 +29,189 @@ import { MaintenanceTimeline } from '@/components/MaintenanceTimeline'
 import { ExpenseForm } from '@/components/ExpenseForm'
 import { ExpenseHistory } from '@/components/ExpenseHistory'
 import { BudgetOverview } from '@/components/BudgetOverview'
-import { RecurringReminderForm } from '@/components/RecurringReminderForm'
-import { RecurringReminderList } from '@/components/RecurringReminderList'
-import { UpcomingReminders } from '@/components/UpcomingReminders'
-import { Plus, Car, Wrench, CurrencyDollar, ArrowsClockwise } from '@phosphor-icons/react'
+import { Plus, Car, Spinner } from '@phosphor-icons/react'
 
 type DialogMode = 
   | { type: 'none' }
   | { type: 'vehicle'; vehicle?: Vehicle }
   | { type: 'maintenance'; event?: MaintenanceEvent }
   | { type: 'expense'; eventId?: string; expense?: Expense }
-  | { type: 'reminder'; reminder?: RecurringReminder }
 
 function App() {
-  const [vehicle, setVehicle] = useKV<Vehicle | null>('vehicle', null)
-  const [maintenanceEvents, setMaintenanceEvents] = useKV<MaintenanceEvent[]>('maintenance-events', [])
-  const [expenses, setExpenses] = useKV<Expense[]>('expenses', [])
-  const [budget, setBudget] = useKV<Budget | null>('budget', null)
-  const [reminders, setReminders] = useKV<RecurringReminder[]>('recurring-reminders', [])
   const [dialogMode, setDialogMode] = useState<DialogMode>({ type: 'none' })
 
-  useRecurringReminders(reminders || [], maintenanceEvents || [], vehicle || null, setMaintenanceEvents)
+  // Fetch data from backend
+  const { data: vehicles, isLoading: vehiclesLoading, error: vehiclesError } = useVehicles()
+  const vehicle = vehicles?.[0] || null // For now, use the first vehicle
+  
+  // Log error for debugging
+  if (vehiclesError) {
+    console.error('Failed to fetch vehicles:', vehiclesError)
+  }
+  
+  const { data: maintenanceEvents = [], isLoading: maintenanceLoading } = useMaintenanceEvents(vehicle?.id)
+  const { data: expenses = [], isLoading: expensesLoading } = useExpenses(vehicle?.id)
+  const { data: budget } = useBudget(vehicle?.id || '')
+  const { data: expenseStats } = useExpenseStats(vehicle?.id || '')
 
-  const handleSaveVehicle = (updatedVehicle: Vehicle) => {
-    const isNewVehicle = !vehicle
-    setVehicle(updatedVehicle)
-    
-    // Create default weekly checks for new vehicles
-    if (isNewVehicle) {
-      const weeklyChecks = createDefaultWeeklyChecks(updatedVehicle.id)
-      setMaintenanceEvents(current => [...(current || []), ...weeklyChecks])
-      toast.success('Vehicle saved with weekly maintenance checks')
+  // Mutations
+  const createVehicle = useCreateVehicle()
+  const updateVehicle = useUpdateVehicle()
+  const createMaintenanceEvent = useCreateMaintenanceEvent()
+  const createMaintenanceEventsBulk = useCreateMaintenanceEventsBulk()
+  const updateMaintenanceEvent = useUpdateMaintenanceEvent()
+  const markComplete = useMarkMaintenanceComplete()
+  const createExpense = useCreateExpense()
+  const updateExpense = useUpdateExpense()
+  const createOrUpdateBudget = useCreateOrUpdateBudget()
+
+  // Helper to show detailed error messages
+  const showError = (error: unknown, fallbackMessage: string) => {
+    if (error instanceof ApiError) {
+      if (error.details) {
+        const messages = Object.entries(error.details)
+          .map(([field, errors]) => `${field}: ${errors.join(', ')}`)
+          .join('\n')
+        toast.error(`Validation failed:\n${messages}`, { duration: 5000 })
+      } else {
+        toast.error(`${fallbackMessage}: ${error.message}`)
+      }
+    } else if (error instanceof Error) {
+      toast.error(`${fallbackMessage}: ${error.message}`)
     } else {
-      toast.success('Vehicle saved successfully')
+      toast.error(fallbackMessage)
     }
-    
-    setDialogMode({ type: 'none' })
   }
 
-  const handleSaveMaintenanceEvent = (event: MaintenanceEvent) => {
-    setMaintenanceEvents(current => {
-      const currentEvents = current || []
-      const existing = currentEvents.find(e => e.id === event.id)
-      if (existing) {
-        return currentEvents.map(e => e.id === event.id ? event : e)
-      }
-      return [...currentEvents, event]
-    })
-    setDialogMode({ type: 'none' })
-    toast.success('Maintenance event saved')
-  }
-
-  const handleSaveExpense = (expense: Expense) => {
-    setExpenses(current => {
-      const currentExpenses = current || []
-      const existing = currentExpenses.find(e => e.id === expense.id)
-      if (existing) {
-        return currentExpenses.map(e => e.id === expense.id ? expense : e)
-      }
-      return [...currentExpenses, expense]
-    })
-    setDialogMode({ type: 'none' })
-    toast.success('Expense recorded')
-  }
-
-  const handleMarkComplete = (eventId: string) => {
-    setMaintenanceEvents(current => {
-      const currentEvents = current || []
-      const event = currentEvents.find(e => e.id === eventId)
-      
-      if (event && reminders) {
-        const relatedReminder = reminders.find(r => 
-          r.category === event.category && r.isActive
-        )
+  const handleSaveVehicle = async (vehicleData: Vehicle) => {
+    try {
+      if (vehicle) {
+        // Update existing vehicle
+        await updateVehicle.mutateAsync({ id: vehicle.id, data: vehicleData })
+        toast.success('Vehicle updated successfully')
+      } else {
+        // Create new vehicle
+        const { id, ...vehicleWithoutId } = vehicleData
+        const newVehicle = await createVehicle.mutateAsync(vehicleWithoutId)
         
-        if (relatedReminder) {
-          const completedDate = new Date().toISOString().split('T')[0]
-          const completedMileage = vehicle?.currentOdometer
-          
-          setReminders(currentReminders => {
-            const updated = currentReminders || []
-            return updated.map(r => 
-              r.id === relatedReminder.id 
-                ? updateReminderAfterCompletion(r, completedDate, completedMileage)
-                : r
-            )
-          })
-        }
+        // Create default weekly checks
+        const nextWeek = new Date()
+        nextWeek.setDate(nextWeek.getDate() + 7)
+        const scheduledDate = nextWeek.toISOString().split('T')[0]
+        
+        const weeklyChecks = defaultWeeklyChecks.map(check => ({
+          vehicleId: newVehicle.id,
+          category: check.category,
+          type: 'weekly-check' as const,
+          title: check.title,
+          description: check.description,
+          scheduledDate,
+          status: 'scheduled' as const,
+        }))
+        
+        await createMaintenanceEventsBulk.mutateAsync(weeklyChecks)
+        toast.success('Vehicle saved with weekly maintenance checks')
       }
+      setDialogMode({ type: 'none' })
+    } catch (error) {
+      showError(error, 'Failed to save vehicle')
+    }
+  }
+
+  const handleSaveMaintenanceEvent = async (event: MaintenanceEvent) => {
+    try {
+      const { id, createdAt, ...eventData } = event
       
-      return currentEvents.map(e =>
-        e.id === eventId
-          ? {
-              ...e,
-              status: 'completed' as const,
-              completedDate: new Date().toISOString().split('T')[0],
-              completedMileage: vehicle?.currentOdometer
-            }
-          : e
-      )
-    })
-    toast.success('Maintenance marked as complete')
-  }
-
-  const handleUpdateBudget = (updatedBudget: Budget) => {
-    setBudget({
-      ...updatedBudget,
-      vehicleId: vehicle?.id || ''
-    })
-    toast.success('Budget updated')
-  }
-
-  const handleSaveReminder = (reminder: RecurringReminder) => {
-    setReminders(current => {
-      const currentReminders = current || []
-      const existing = currentReminders.find(r => r.id === reminder.id)
-      if (existing) {
-        return currentReminders.map(r => r.id === reminder.id ? reminder : r)
+      if (maintenanceEvents.find(e => e.id === event.id)) {
+        await updateMaintenanceEvent.mutateAsync({ id: event.id, data: eventData })
+      } else {
+        await createMaintenanceEvent.mutateAsync(eventData)
       }
-      return [...currentReminders, reminder]
-    })
-    setDialogMode({ type: 'none' })
-    toast.success('Recurring reminder saved')
+      setDialogMode({ type: 'none' })
+      toast.success('Maintenance event saved')
+    } catch (error) {
+      showError(error, 'Failed to save maintenance event')
+    }
   }
 
-  const handleDeleteReminder = (reminderId: string) => {
-    setReminders(current => {
-      const currentReminders = current || []
-      return currentReminders.filter(r => r.id !== reminderId)
-    })
-    toast.success('Reminder deleted')
+  const handleSaveExpense = async (expense: Expense) => {
+    try {
+      const { id, ...expenseData } = expense
+      
+      if (expenses.find(e => e.id === expense.id)) {
+        await updateExpense.mutateAsync({ id: expense.id, data: expenseData })
+      } else {
+        await createExpense.mutateAsync(expenseData)
+      }
+      setDialogMode({ type: 'none' })
+      toast.success('Expense recorded')
+    } catch (error) {
+      showError(error, 'Failed to save expense')
+    }
   }
 
-  const handleToggleReminderActive = (reminderId: string, isActive: boolean) => {
-    setReminders(current => {
-      const currentReminders = current || []
-      return currentReminders.map(r =>
-        r.id === reminderId ? { ...r, isActive } : r
-      )
-    })
-    toast.success(isActive ? 'Reminder activated' : 'Reminder deactivated')
+  const handleMarkComplete = async (eventId: string) => {
+    try {
+      await markComplete.mutateAsync({ 
+        id: eventId, 
+        completedMileage: vehicle?.currentOdometer 
+      })
+      toast.success('Maintenance marked as complete')
+    } catch (error) {
+      showError(error, 'Failed to mark as complete')
+    }
   }
 
-  const totalSpending = (expenses || []).reduce((sum, exp) => sum + exp.totalCost, 0)
+  const handleUpdateBudget = async (updatedBudget: Budget) => {
+    try {
+      await createOrUpdateBudget.mutateAsync({
+        ...updatedBudget,
+        vehicleId: vehicle?.id || '',
+      })
+      toast.success('Budget updated')
+    } catch (error) {
+      showError(error, 'Failed to update budget')
+    }
+  }
 
+  const totalSpending = expenseStats?.totalSpending || 0
+
+  // Loading state
+  if (vehiclesLoading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground p-4 flex items-center justify-center">
+        <Toaster position="top-center" />
+        <div className="text-center">
+          <Spinner className="animate-spin mx-auto mb-4" size={48} />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state - show error with retry and option to add vehicle anyway
+  if (vehiclesError) {
+    return (
+      <div className="min-h-screen bg-background text-foreground p-4 flex items-center justify-center">
+        <Toaster position="top-center" />
+        <div className="w-full max-w-2xl">
+          <div className="text-center mb-8">
+            <Car className="text-destructive mx-auto mb-4" size={64} />
+            <h1 className="text-3xl font-semibold mb-2">Connection Error</h1>
+            <p className="text-muted-foreground mb-4">
+              Could not connect to the server. Make sure the backend is running on port 3001.
+            </p>
+            <p className="text-xs text-destructive mb-4">
+              {vehiclesError instanceof Error ? vehiclesError.message : 'Unknown error'}
+            </p>
+          </div>
+          <VehicleForm onSave={handleSaveVehicle} />
+        </div>
+      </div>
+    )
+  }
+
+  // No vehicle - show form to add one
   if (!vehicle) {
     return (
       <div className="min-h-screen bg-background text-foreground p-4 flex items-center justify-center">
@@ -198,10 +252,9 @@ function App() {
 
       <main className="container mx-auto px-4 py-6">
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-            <TabsTrigger value="reminders">Reminders</TabsTrigger>
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
           </TabsList>
 
@@ -217,12 +270,6 @@ function App() {
                 onUpdateBudget={handleUpdateBudget}
               />
             </div>
-
-            <UpcomingReminders
-              reminders={reminders || []}
-              vehicle={vehicle}
-              onAddReminder={() => setDialogMode({ type: 'reminder' })}
-            />
             
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -232,12 +279,18 @@ function App() {
                   Schedule
                 </Button>
               </div>
-              <MaintenanceTimeline
-                events={(maintenanceEvents || []).filter(e => e.status !== 'completed').slice(0, 3)}
-                onEventClick={(event) => setDialogMode({ type: 'maintenance', event })}
-                onAddExpense={(eventId) => setDialogMode({ type: 'expense', eventId })}
-                onMarkComplete={handleMarkComplete}
-              />
+              {maintenanceLoading ? (
+                <div className="text-center py-8">
+                  <Spinner className="animate-spin mx-auto" size={32} />
+                </div>
+              ) : (
+                <MaintenanceTimeline
+                  events={maintenanceEvents.filter(e => e.status !== 'completed').slice(0, 3)}
+                  onEventClick={(event) => setDialogMode({ type: 'maintenance', event })}
+                  onAddExpense={(eventId) => setDialogMode({ type: 'expense', eventId })}
+                  onMarkComplete={handleMarkComplete}
+                />
+              )}
             </div>
           </TabsContent>
 
@@ -249,33 +302,18 @@ function App() {
                 Add Event
               </Button>
             </div>
-            <MaintenanceTimeline
-              events={maintenanceEvents || []}
-              onEventClick={(event) => setDialogMode({ type: 'maintenance', event })}
-              onAddExpense={(eventId) => setDialogMode({ type: 'expense', eventId })}
-              onMarkComplete={handleMarkComplete}
-            />
-          </TabsContent>
-
-          <TabsContent value="reminders" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold">Recurring Reminders</h2>
-                <p className="text-sm text-muted-foreground">
-                  Automatically schedule maintenance based on time or mileage
-                </p>
+            {maintenanceLoading ? (
+              <div className="text-center py-8">
+                <Spinner className="animate-spin mx-auto" size={32} />
               </div>
-              <Button onClick={() => setDialogMode({ type: 'reminder' })}>
-                <Plus size={18} />
-                Add Reminder
-              </Button>
-            </div>
-            <RecurringReminderList
-              reminders={reminders || []}
-              onEdit={(reminder) => setDialogMode({ type: 'reminder', reminder })}
-              onDelete={handleDeleteReminder}
-              onToggleActive={handleToggleReminderActive}
-            />
+            ) : (
+              <MaintenanceTimeline
+                events={maintenanceEvents}
+                onEventClick={(event) => setDialogMode({ type: 'maintenance', event })}
+                onAddExpense={(eventId) => setDialogMode({ type: 'expense', eventId })}
+                onMarkComplete={handleMarkComplete}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="expenses" className="space-y-6">
@@ -286,7 +324,13 @@ function App() {
                 Add Expense
               </Button>
             </div>
-            <ExpenseHistory expenses={expenses || []} events={maintenanceEvents || []} />
+            {expensesLoading ? (
+              <div className="text-center py-8">
+                <Spinner className="animate-spin mx-auto" size={32} />
+              </div>
+            ) : (
+              <ExpenseHistory expenses={expenses} events={maintenanceEvents} />
+            )}
           </TabsContent>
         </Tabs>
       </main>
@@ -314,14 +358,6 @@ function App() {
               vehicleId={vehicle.id}
               expense={dialogMode.expense}
               onSave={handleSaveExpense}
-              onCancel={() => setDialogMode({ type: 'none' })}
-            />
-          )}
-          {dialogMode.type === 'reminder' && vehicle && (
-            <RecurringReminderForm
-              vehicleId={vehicle.id}
-              reminder={dialogMode.reminder}
-              onSave={handleSaveReminder}
               onCancel={() => setDialogMode({ type: 'none' })}
             />
           )}

@@ -12,9 +12,21 @@ const app = new Hono()
 // Middleware
 app.use('*', logger())
 app.use('*', cors({
-  origin: ['http://localhost:5173', 'http://localhost:5000'],
+  origin: '*', // Allow all origins in development
   credentials: true,
 }))
+
+// Global error handler
+app.onError((err, c) => {
+  console.error('Server error:', err)
+  
+  // Handle Zod validation errors from zValidator
+  if (err.message && err.message.includes('Validation')) {
+    return c.json({ error: err.message }, 400)
+  }
+  
+  return c.json({ error: err.message || 'Internal server error' }, 500)
+})
 
 // Health check
 app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }))
