@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface ExpenseFormProps {
   eventId: string
@@ -44,13 +43,13 @@ export const ExpenseForm = ({ eventId, vehicleId, expense, onSave, onCancel }: E
   const totalCost = formData.partsCost + formData.laborCost + formData.otherCost
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>{expense ? 'Edit Expense' : 'Add Expense'}</CardTitle>
-        <CardDescription>Track your maintenance costs</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="w-full">
+      <div className="border-b border-border px-6 py-5 bg-card">
+        <h2 className="text-2xl font-semibold">{expense ? 'Edit Expense' : 'Add Expense'}</h2>
+        <p className="text-sm text-muted-foreground mt-1">Track your maintenance costs</p>
+      </div>
+      <div className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="date">Date *</Label>
@@ -85,8 +84,8 @@ export const ExpenseForm = ({ eventId, vehicleId, expense, onSave, onCancel }: E
             />
           </div>
           
-          <div className="border-t border-border pt-4 space-y-4">
-            <h4 className="text-sm font-medium">Cost Breakdown</h4>
+          <div className="border-t border-border pt-5 space-y-4">
+            <h4 className="text-sm font-semibold">Cost Breakdown</h4>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
@@ -126,28 +125,28 @@ export const ExpenseForm = ({ eventId, vehicleId, expense, onSave, onCancel }: E
               </div>
             </div>
             
-            <div className="bg-muted p-4 rounded-lg">
+            <div className="bg-accent/10 border border-accent/30 p-4 rounded-lg">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Total Cost</span>
-                <span className="text-xl font-semibold text-accent">
+                <span className="text-sm font-semibold">Total Cost</span>
+                <span className="text-2xl font-bold text-accent">
                   €{totalCost.toFixed(2)}
                 </span>
               </div>
             </div>
           </div>
           
-          <div className="flex gap-3 pt-4">
-            <Button type="submit" className="flex-1">
+          <div className="flex gap-3 pt-2 border-t border-border">
+            <Button type="submit" className="flex-1" size="lg">
               {expense ? 'Update Expense' : 'Add Expense'}
             </Button>
             {onCancel && (
-              <Button type="button" variant="secondary" onClick={onCancel}>
+              <Button type="button" variant="secondary" onClick={onCancel} size="lg">
                 Cancel
               </Button>
             )}
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

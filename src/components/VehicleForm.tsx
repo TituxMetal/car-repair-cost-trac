@@ -4,7 +4,6 @@ import { generateId } from '@/lib/helpers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface VehicleFormProps {
@@ -41,13 +40,13 @@ export const VehicleForm = ({ vehicle, onSave, onCancel }: VehicleFormProps) => 
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>{vehicle ? 'Edit Vehicle' : 'Add Vehicle'}</CardTitle>
-        <CardDescription>Enter your vehicle details</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="w-full">
+      <div className="border-b border-border px-6 py-5 bg-card">
+        <h2 className="text-2xl font-semibold">{vehicle ? 'Edit Vehicle' : 'Add Vehicle'}</h2>
+        <p className="text-sm text-muted-foreground mt-1">Enter your vehicle details</p>
+      </div>
+      <div className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="make">Make *</Label>
@@ -156,18 +155,18 @@ export const VehicleForm = ({ vehicle, onSave, onCancel }: VehicleFormProps) => 
             </div>
           </div>
           
-          <div className="flex gap-3 pt-4">
-            <Button type="submit" className="flex-1">
+          <div className="flex gap-3 pt-2 border-t border-border">
+            <Button type="submit" className="flex-1" size="lg">
               {vehicle ? 'Update Vehicle' : 'Add Vehicle'}
             </Button>
             {onCancel && (
-              <Button type="button" variant="secondary" onClick={onCancel}>
+              <Button type="button" variant="secondary" onClick={onCancel} size="lg">
                 Cancel
               </Button>
             )}
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
