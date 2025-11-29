@@ -16,6 +16,7 @@ import { ExpenseHistory } from '@/components/ExpenseHistory'
 import { BudgetOverview } from '@/components/BudgetOverview'
 import { RecurringReminderForm } from '@/components/RecurringReminderForm'
 import { RecurringReminderList } from '@/components/RecurringReminderList'
+import { UpcomingReminders } from '@/components/UpcomingReminders'
 import { Plus, Car, Wrench, CurrencyDollar, ArrowsClockwise } from '@phosphor-icons/react'
 
 type DialogMode = 
@@ -216,6 +217,12 @@ function App() {
                 onUpdateBudget={handleUpdateBudget}
               />
             </div>
+
+            <UpcomingReminders
+              reminders={reminders || []}
+              vehicle={vehicle}
+              onAddReminder={() => setDialogMode({ type: 'reminder' })}
+            />
             
             <div className="space-y-4">
               <div className="flex items-center justify-between">
