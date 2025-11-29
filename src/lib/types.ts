@@ -31,6 +31,8 @@ export type MaintenanceType = 'service' | 'part-replacement' | 'mileage-check' |
 
 export type MaintenanceStatus = 'scheduled' | 'completed' | 'overdue'
 
+export type RecurrenceType = 'weekly' | 'monthly' | 'mileage'
+
 export interface MaintenanceEvent {
   id: string
   vehicleId: string
@@ -46,6 +48,11 @@ export interface MaintenanceEvent {
   appointmentTime?: string
   appointmentPlace?: string
   appointmentReason?: string
+  // Recurring fields
+  isRecurring?: boolean
+  recurrenceType?: RecurrenceType
+  recurrenceValue?: number
+  parentEventId?: string
   createdAt: string
 }
 

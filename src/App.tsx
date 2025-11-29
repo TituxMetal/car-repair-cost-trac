@@ -29,6 +29,8 @@ import { MaintenanceTimeline } from '@/components/MaintenanceTimeline'
 import { ExpenseForm } from '@/components/ExpenseForm'
 import { ExpenseHistory } from '@/components/ExpenseHistory'
 import { BudgetOverview } from '@/components/BudgetOverview'
+import { UpcomingChecks } from '@/components/UpcomingChecks'
+import { ChecksHistory } from '@/components/ChecksHistory'
 import { Plus, Car, Spinner } from '@phosphor-icons/react'
 
 type DialogMode = 
@@ -107,6 +109,9 @@ function App() {
           description: check.description,
           scheduledDate,
           status: 'scheduled' as const,
+          isRecurring: true,
+          recurrenceType: 'weekly' as const,
+          recurrenceValue: 1,
         }))
         
         await createMaintenanceEventsBulk.mutateAsync(weeklyChecks)
@@ -180,7 +185,7 @@ function App() {
   if (vehiclesLoading) {
     return (
       <div className="min-h-screen bg-background text-foreground p-4 flex items-center justify-center">
-        <Toaster position="top-center" />
+        <Toaster position="top-center" theme="dark" richColors />
         <div className="text-center">
           <Spinner className="animate-spin mx-auto mb-4" size={48} />
           <p className="text-muted-foreground">Loading...</p>
@@ -193,7 +198,7 @@ function App() {
   if (vehiclesError) {
     return (
       <div className="min-h-screen bg-background text-foreground p-4 flex items-center justify-center">
-        <Toaster position="top-center" />
+        <Toaster position="top-center" theme="dark" richColors />
         <div className="w-full max-w-2xl">
           <div className="text-center mb-8">
             <Car className="text-destructive mx-auto mb-4" size={64} />
@@ -217,7 +222,7 @@ function App() {
   if (!vehicle) {
     return (
       <div className="min-h-screen bg-background text-foreground p-4 flex items-center justify-center">
-        <Toaster position="top-center" />
+        <Toaster position="top-center" theme="dark" richColors />
         <div className="w-full max-w-2xl">
           <div className="text-center mb-8">
             <Car className="text-accent mx-auto mb-4" size={64} />
@@ -236,7 +241,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Toaster position="top-center" />
+      <Toaster position="top-center" theme="dark" richColors />
       
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
@@ -263,6 +268,12 @@ function App() {
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
+            {/* Quick Checks Section - Most Important! */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <UpcomingChecks vehicleId={vehicle.id} />
+              <ChecksHistory vehicleId={vehicle.id} />
+            </div>
+            
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <VehicleProfile
                 vehicle={vehicle}

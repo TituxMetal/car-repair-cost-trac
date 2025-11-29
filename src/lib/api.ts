@@ -1,6 +1,9 @@
 import { Vehicle, MaintenanceEvent, Expense, Budget } from './types'
 
-// Use relative path - Vite proxy will forward /api to the backend
+// API base URL - always use relative path since we serve fullstack from one origin
+// This works for:
+// - Local dev with Vite proxy
+// - Production on Fly.io (same origin)
 const API_BASE = '/api'
 
 // Custom error class to include validation details
@@ -84,6 +87,12 @@ export const maintenanceApi = {
   
   getById: (id: string) => fetchApi<MaintenanceEvent>(`/maintenance/${id}`),
   
+  getUpcoming: (vehicleId: string) =>
+    fetchApi<MaintenanceEvent[]>(`/maintenance/upcoming/${vehicleId}`),
+  
+  getHistory: (vehicleId: string) =>
+    fetchApi<MaintenanceEvent[]>(`/maintenance/history/${vehicleId}`),
+  
   create: (event: Omit<MaintenanceEvent, 'id' | 'createdAt'>) =>
     fetchApi<MaintenanceEvent>('/maintenance', {
       method: 'POST',
@@ -103,7 +112,7 @@ export const maintenanceApi = {
     }),
   
   markComplete: (id: string, completedMileage?: number) =>
-    fetchApi<MaintenanceEvent>(`/maintenance/${id}/complete`, {
+    fetchApi<{ completed: MaintenanceEvent; next: MaintenanceEvent | null; message: string }>(`/maintenance/${id}/complete`, {
       method: 'PATCH',
       body: JSON.stringify({ completedMileage }),
     }),

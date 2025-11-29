@@ -1,4 +1,5 @@
 import { serve } from '@hono/node-server'
+import { serveStatic } from '@hono/node-server/serve-static'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
@@ -6,13 +7,15 @@ import { vehiclesRouter } from './routes/vehicles'
 import { maintenanceRouter } from './routes/maintenance'
 import { expensesRouter } from './routes/expenses'
 import { budgetsRouter } from './routes/budgets'
+import { readFileSync, existsSync } from 'fs'
+import { join } from 'path'
 
 const app = new Hono()
 
 // Middleware
 app.use('*', logger())
 app.use('*', cors({
-  origin: '*', // Allow all origins in development
+  origin: '*',
   credentials: true,
 }))
 
@@ -40,12 +43,44 @@ api.route('/budgets', budgetsRouter)
 
 app.route('/api', api)
 
+// Serve static files from the built frontend
+const distPath = join(process.cwd(), 'dist')
+
+if (existsSync(distPath)) {
+  console.log('📁 Serving frontend from:', distPath)
+  
+  // Serve static assets (JS, CSS, images)
+  app.use('/assets/*', serveStatic({ root: './dist' }))
+  
+  // Serve favicon and other root static files  
+  app.get('/favicon.ico', serveStatic({ root: './dist' }))
+  app.get('/vite.svg', serveStatic({ root: './dist' }))
+  
+  // SPA fallback - serve index.html for all other non-API routes
+  app.get('*', (c) => {
+    // Skip API routes
+    if (c.req.path.startsWith('/api')) {
+      return c.json({ error: 'Not found' }, 404)
+    }
+    const indexPath = join(distPath, 'index.html')
+    if (existsSync(indexPath)) {
+      const html = readFileSync(indexPath, 'utf-8')
+      return c.html(html)
+    }
+    return c.json({ error: 'Frontend not found' }, 404)
+  })
+} else {
+  console.log('⚠️ No dist folder found, serving API only')
+}
+
 const port = Number(process.env.PORT) || 3001
-console.log(`🚀 Server is running on http://localhost:${port}`)
+const hostname = '0.0.0.0'
+console.log(`🚀 Server is running on http://${hostname}:${port}`)
 
 serve({
   fetch: app.fetch,
   port,
+  hostname,
 })
 
 export default app

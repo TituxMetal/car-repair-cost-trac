@@ -78,6 +78,10 @@ export const createDefaultWeeklyChecks = (vehicleId: string): MaintenanceEvent[]
     appointmentTime: '',
     appointmentPlace: '',
     appointmentReason: '',
+    // Recurring settings
+    isRecurring: true,
+    recurrenceType: 'weekly' as const,
+    recurrenceValue: 1, // Every 1 week
     createdAt: now.toISOString()
   }))
 }

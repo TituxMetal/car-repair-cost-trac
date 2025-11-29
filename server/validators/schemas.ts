@@ -52,21 +52,28 @@ export const maintenanceStatusSchema = z.enum([
   'overdue',
 ])
 
+const recurrenceTypeSchema = z.enum(['weekly', 'monthly', 'mileage'])
+
 // Maintenance event schemas
 export const maintenanceEventCreateSchema = z.object({
   vehicleId: z.string().min(1, 'Vehicle ID is required'),
   category: maintenanceCategorySchema,
   type: maintenanceTypeSchema,
   title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
-  scheduledDate: z.string().optional(),
-  scheduledMileage: z.number().int().min(0).optional(),
-  completedDate: z.string().optional(),
-  completedMileage: z.number().int().min(0).optional(),
+  description: z.string().optional().nullable(),
+  scheduledDate: z.string().optional().nullable(),
+  scheduledMileage: z.number().int().min(0).optional().nullable(),
+  completedDate: z.string().optional().nullable(),
+  completedMileage: z.number().int().min(0).optional().nullable(),
   status: maintenanceStatusSchema.default('scheduled'),
-  appointmentTime: z.string().optional(),
-  appointmentPlace: z.string().optional(),
-  appointmentReason: z.string().optional(),
+  appointmentTime: z.string().optional().nullable(),
+  appointmentPlace: z.string().optional().nullable(),
+  appointmentReason: z.string().optional().nullable(),
+  // Recurring fields
+  isRecurring: z.boolean().optional().default(false),
+  recurrenceType: recurrenceTypeSchema.optional().nullable(),
+  recurrenceValue: z.number().int().min(1).optional().nullable(),
+  parentEventId: z.string().optional().nullable(),
 })
 
 export const maintenanceEventUpdateSchema = maintenanceEventCreateSchema.partial().omit({ vehicleId: true })
