@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useKV } from '@github/spark/hooks'
-import { Vehicle, MaintenanceEvent, Expense, Budget } from '@/lib/types'
+import { Vehicle, MaintenanceEvent, Expense, Budget, RecurringReminder } from '@/lib/types'
 import { generateId, createDefaultWeeklyChecks } from '@/lib/helpers'
+import { useRecurringReminders, updateReminderAfterCompletion } from '@/hooks/use-recurring-reminders'
 import { Toaster, toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -13,20 +14,26 @@ import { MaintenanceTimeline } from '@/components/MaintenanceTimeline'
 import { ExpenseForm } from '@/components/ExpenseForm'
 import { ExpenseHistory } from '@/components/ExpenseHistory'
 import { BudgetOverview } from '@/components/BudgetOverview'
-import { Plus, Car, Wrench, CurrencyDollar } from '@phosphor-icons/react'
+import { RecurringReminderForm } from '@/components/RecurringReminderForm'
+import { RecurringReminderList } from '@/components/RecurringReminderList'
+import { Plus, Car, Wrench, CurrencyDollar, ArrowsClockwise } from '@phosphor-icons/react'
 
 type DialogMode = 
   | { type: 'none' }
   | { type: 'vehicle'; vehicle?: Vehicle }
   | { type: 'maintenance'; event?: MaintenanceEvent }
   | { type: 'expense'; eventId?: string; expense?: Expense }
+  | { type: 'reminder'; reminder?: RecurringReminder }
 
 function App() {
   const [vehicle, setVehicle] = useKV<Vehicle | null>('vehicle', null)
   const [maintenanceEvents, setMaintenanceEvents] = useKV<MaintenanceEvent[]>('maintenance-events', [])
   const [expenses, setExpenses] = useKV<Expense[]>('expenses', [])
   const [budget, setBudget] = useKV<Budget | null>('budget', null)
+  const [reminders, setReminders] = useKV<RecurringReminder[]>('recurring-reminders', [])
   const [dialogMode, setDialogMode] = useState<DialogMode>({ type: 'none' })
+
+  useRecurringReminders(reminders || [], maintenanceEvents || [], vehicle || null, setMaintenanceEvents)
 
   const handleSaveVehicle = (updatedVehicle: Vehicle) => {
     const isNewVehicle = !vehicle
@@ -73,6 +80,28 @@ function App() {
   const handleMarkComplete = (eventId: string) => {
     setMaintenanceEvents(current => {
       const currentEvents = current || []
+      const event = currentEvents.find(e => e.id === eventId)
+      
+      if (event && reminders) {
+        const relatedReminder = reminders.find(r => 
+          r.category === event.category && r.isActive
+        )
+        
+        if (relatedReminder) {
+          const completedDate = new Date().toISOString().split('T')[0]
+          const completedMileage = vehicle?.currentOdometer
+          
+          setReminders(currentReminders => {
+            const updated = currentReminders || []
+            return updated.map(r => 
+              r.id === relatedReminder.id 
+                ? updateReminderAfterCompletion(r, completedDate, completedMileage)
+                : r
+            )
+          })
+        }
+      }
+      
       return currentEvents.map(e =>
         e.id === eventId
           ? {
@@ -93,6 +122,37 @@ function App() {
       vehicleId: vehicle?.id || ''
     })
     toast.success('Budget updated')
+  }
+
+  const handleSaveReminder = (reminder: RecurringReminder) => {
+    setReminders(current => {
+      const currentReminders = current || []
+      const existing = currentReminders.find(r => r.id === reminder.id)
+      if (existing) {
+        return currentReminders.map(r => r.id === reminder.id ? reminder : r)
+      }
+      return [...currentReminders, reminder]
+    })
+    setDialogMode({ type: 'none' })
+    toast.success('Recurring reminder saved')
+  }
+
+  const handleDeleteReminder = (reminderId: string) => {
+    setReminders(current => {
+      const currentReminders = current || []
+      return currentReminders.filter(r => r.id !== reminderId)
+    })
+    toast.success('Reminder deleted')
+  }
+
+  const handleToggleReminderActive = (reminderId: string, isActive: boolean) => {
+    setReminders(current => {
+      const currentReminders = current || []
+      return currentReminders.map(r =>
+        r.id === reminderId ? { ...r, isActive } : r
+      )
+    })
+    toast.success(isActive ? 'Reminder activated' : 'Reminder deactivated')
   }
 
   const totalSpending = (expenses || []).reduce((sum, exp) => sum + exp.totalCost, 0)
@@ -137,9 +197,10 @@ function App() {
 
       <main className="container mx-auto px-4 py-6">
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+            <TabsTrigger value="reminders">Reminders</TabsTrigger>
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
           </TabsList>
 
@@ -189,6 +250,27 @@ function App() {
             />
           </TabsContent>
 
+          <TabsContent value="reminders" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold">Recurring Reminders</h2>
+                <p className="text-sm text-muted-foreground">
+                  Automatically schedule maintenance based on time or mileage
+                </p>
+              </div>
+              <Button onClick={() => setDialogMode({ type: 'reminder' })}>
+                <Plus size={18} />
+                Add Reminder
+              </Button>
+            </div>
+            <RecurringReminderList
+              reminders={reminders || []}
+              onEdit={(reminder) => setDialogMode({ type: 'reminder', reminder })}
+              onDelete={handleDeleteReminder}
+              onToggleActive={handleToggleReminderActive}
+            />
+          </TabsContent>
+
           <TabsContent value="expenses" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">All Expenses</h2>
@@ -225,6 +307,14 @@ function App() {
               vehicleId={vehicle.id}
               expense={dialogMode.expense}
               onSave={handleSaveExpense}
+              onCancel={() => setDialogMode({ type: 'none' })}
+            />
+          )}
+          {dialogMode.type === 'reminder' && vehicle && (
+            <RecurringReminderForm
+              vehicleId={vehicle.id}
+              reminder={dialogMode.reminder}
+              onSave={handleSaveReminder}
               onCancel={() => setDialogMode({ type: 'none' })}
             />
           )}

@@ -69,3 +69,21 @@ export interface Budget {
   period: 'monthly' | 'yearly'
   startDate: string
 }
+
+export type RecurrenceType = 'mileage' | 'time' | 'both'
+
+export interface RecurringReminder {
+  id: string
+  vehicleId: string
+  category: MaintenanceCategory
+  title: string
+  description?: string
+  recurrenceType: RecurrenceType
+  mileageInterval?: number
+  timeInterval?: number
+  timeUnit?: 'days' | 'weeks' | 'months' | 'years'
+  lastCompletedDate?: string
+  lastCompletedMileage?: number
+  isActive: boolean
+  createdAt: string
+}

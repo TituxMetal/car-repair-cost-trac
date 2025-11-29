@@ -26,6 +26,13 @@ The app manages persistent vehicle data, maintenance schedules, and expense trac
 - **Progression**: Dashboard/Calendar → Event Form → Select Type & Category → Set Date/Mileage → Add Appointment Details → Save
 - **Success criteria**: Events display in chronological order, support both past and future dates, can be marked complete
 
+### Recurring Maintenance Reminders
+- **Functionality**: Create time-based (e.g., every 3 months) or mileage-based (e.g., every 5,000 km) recurring reminders that automatically generate maintenance events
+- **Purpose**: Automate regular maintenance tracking so users never miss critical service intervals
+- **Trigger**: User clicks "Add Reminder" in Reminders tab
+- **Progression**: Reminders Tab → Create Reminder Form → Select Category → Choose Recurrence Type (Time/Mileage/Both) → Set Interval → Save → Auto-generates events
+- **Success criteria**: Reminders automatically create scheduled events when none exist, update last completion date/mileage when events are marked complete, can be toggled active/inactive
+
 ### Expense Tracking & Logging
 - **Functionality**: Record detailed costs for maintenance events (parts, labor, total) with metadata (garage, description)
 - **Purpose**: Maintain complete financial history for budget analysis and decision-making
@@ -46,6 +53,8 @@ The app manages persistent vehicle data, maintenance schedules, and expense trac
 - **Past Events**: Support logging historical maintenance for complete vehicle history
 - **Odometer Updates**: Manual odometer entry with validation to prevent backwards mileage
 - **Budget Overflow**: Clear visual indicators when spending exceeds budget without blocking functionality
+- **Duplicate Reminders**: Prevents creating duplicate scheduled events when active reminders exist for the same category
+- **Inactive Reminders**: Reminders can be deactivated without deletion to pause auto-generation of events
 
 ## Design Direction
 The design should feel professional and automotive-inspired - think precision dashboard instruments rather than playful consumer apps. A darkish, sophisticated interface with zinc tones creates focus on the data while reducing eye strain during quick mobile entries. The minimal interface emphasizes clarity and speed of data entry.
@@ -109,12 +118,15 @@ Subtle, purposeful animations reinforce the app's reliability - smooth transitio
   - Wrench (maintenance/service)
   - GasPump (fuel-related)
   - Gauge (odometer/mileage)
+  - Clock (time-based reminders)
+  - ArrowsClockwise (recurring reminders)
   - Calendar (scheduling)
   - CurrencyDollar (expenses/budget)
   - Plus (add new)
   - PencilSimple (edit)
   - Check (complete task)
   - Warning (overdue/over budget)
+  - Trash (delete)
   
 - **Spacing**: 
   - Container padding: p-4 (mobile), p-6 (desktop)

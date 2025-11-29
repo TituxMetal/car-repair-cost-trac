@@ -111,3 +111,38 @@ export const isOverdue = (scheduledDate?: string, status?: string): boolean => {
   if (!scheduledDate || status === 'completed') return false
   return new Date(scheduledDate) < new Date()
 }
+
+export const calculateNextDueDate = (
+  lastDate: string | undefined,
+  interval: number,
+  unit: 'days' | 'weeks' | 'months' | 'years'
+): string => {
+  const baseDate = lastDate ? new Date(lastDate) : new Date()
+  const nextDate = new Date(baseDate)
+  
+  switch (unit) {
+    case 'days':
+      nextDate.setDate(nextDate.getDate() + interval)
+      break
+    case 'weeks':
+      nextDate.setDate(nextDate.getDate() + interval * 7)
+      break
+    case 'months':
+      nextDate.setMonth(nextDate.getMonth() + interval)
+      break
+    case 'years':
+      nextDate.setFullYear(nextDate.getFullYear() + interval)
+      break
+  }
+  
+  return nextDate.toISOString().split('T')[0]
+}
+
+export const calculateNextDueMileage = (
+  lastMileage: number | undefined,
+  currentMileage: number,
+  interval: number
+): number => {
+  const baseMileage = lastMileage || currentMileage
+  return baseMileage + interval
+}
