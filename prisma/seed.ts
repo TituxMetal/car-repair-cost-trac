@@ -10,14 +10,15 @@ async function main() {
   // Create a sample vehicle
   const vehicle = await prisma.vehicle.create({
     data: {
-      make: 'Toyota',
-      model: 'Camry',
-      year: 2020,
-      vin: '1HGBH41JXMN109186',
-      licensePlate: 'ABC-123',
-      currentOdometer: 45000,
+      make: 'Mini',
+      model: 'Cooper Coupé S',
+      year: 2012,
+      vin: 'WMWXC31030T000000',
+      licensePlate: 'FAKEPLATE',
+      currentOdometer: 92500,
+      purchaseDate: '2025-07-08',
       fuelType: 'gasoline',
-      engineType: '2.5L 4-cylinder',
+      engineType: '1.6L Turbo 182ch',
     },
   })
 
