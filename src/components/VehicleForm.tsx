@@ -1,0 +1,173 @@
+import { useState } from 'react'
+import { Vehicle } from '@/lib/types'
+import { generateId } from '@/lib/helpers'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
+interface VehicleFormProps {
+  vehicle?: Vehicle
+  onSave: (vehicle: Vehicle) => void
+  onCancel?: () => void
+}
+
+export const VehicleForm = ({ vehicle, onSave, onCancel }: VehicleFormProps) => {
+  const [formData, setFormData] = useState<Vehicle>(
+    vehicle || {
+      id: generateId(),
+      make: '',
+      model: '',
+      year: new Date().getFullYear(),
+      currentOdometer: 0,
+      vin: '',
+      licensePlate: '',
+      purchaseDate: '',
+      fuelType: '',
+      engineType: ''
+    }
+  )
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (formData.make && formData.model && formData.year) {
+      onSave(formData)
+    }
+  }
+
+  const handleChange = (field: keyof Vehicle, value: string | number) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>{vehicle ? 'Edit Vehicle' : 'Add Vehicle'}</CardTitle>
+        <CardDescription>Enter your vehicle details</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="make">Make *</Label>
+              <Input
+                id="make"
+                value={formData.make}
+                onChange={(e) => handleChange('make', e.target.value)}
+                placeholder="Toyota"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="model">Model *</Label>
+              <Input
+                id="model"
+                value={formData.model}
+                onChange={(e) => handleChange('model', e.target.value)}
+                placeholder="Camry"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="year">Year *</Label>
+              <Input
+                id="year"
+                type="number"
+                value={formData.year}
+                onChange={(e) => handleChange('year', parseInt(e.target.value))}
+                min="1900"
+                max={new Date().getFullYear() + 1}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="currentOdometer">Current Odometer (km) *</Label>
+              <Input
+                id="currentOdometer"
+                type="number"
+                value={formData.currentOdometer}
+                onChange={(e) => handleChange('currentOdometer', parseInt(e.target.value))}
+                min="0"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="vin">VIN</Label>
+              <Input
+                id="vin"
+                value={formData.vin}
+                onChange={(e) => handleChange('vin', e.target.value)}
+                placeholder="1HGBH41JXMN109186"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="licensePlate">License Plate</Label>
+              <Input
+                id="licensePlate"
+                value={formData.licensePlate}
+                onChange={(e) => handleChange('licensePlate', e.target.value)}
+                placeholder="ABC-123"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="purchaseDate">Purchase Date</Label>
+              <Input
+                id="purchaseDate"
+                type="date"
+                value={formData.purchaseDate}
+                onChange={(e) => handleChange('purchaseDate', e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="fuelType">Fuel Type</Label>
+              <Select
+                value={formData.fuelType}
+                onValueChange={(value) => handleChange('fuelType', value)}
+              >
+                <SelectTrigger id="fuelType">
+                  <SelectValue placeholder="Select fuel type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="gasoline">Gasoline</SelectItem>
+                  <SelectItem value="diesel">Diesel</SelectItem>
+                  <SelectItem value="electric">Electric</SelectItem>
+                  <SelectItem value="hybrid">Hybrid</SelectItem>
+                  <SelectItem value="plug-in-hybrid">Plug-in Hybrid</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="engineType">Engine Type</Label>
+              <Input
+                id="engineType"
+                value={formData.engineType}
+                onChange={(e) => handleChange('engineType', e.target.value)}
+                placeholder="2.5L I4"
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-3 pt-4">
+            <Button type="submit" className="flex-1">
+              {vehicle ? 'Update Vehicle' : 'Add Vehicle'}
+            </Button>
+            {onCancel && (
+              <Button type="button" variant="secondary" onClick={onCancel}>
+                Cancel
+              </Button>
+            )}
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  )
+}
