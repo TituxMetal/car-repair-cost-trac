@@ -2,6 +2,7 @@ import { PrismaClient } from '../../generated/prisma'
 import { PrismaLibSql } from '@prisma/adapter-libsql'
 import { existsSync, mkdirSync } from 'fs'
 import { dirname } from 'path'
+import { spawnSync } from 'child_process'
 
 const dbUrl = process.env.DATABASE_URL || 'file:prisma/dev.db'
 const adapter = new PrismaLibSql({ url: dbUrl })
@@ -40,16 +41,19 @@ export async function initDatabase(): Promise<void> {
   // Use Prisma's db push to ensure schema is up to date
   // This creates tables if they don't exist
   try {
-    const { execSync } = await import('child_process')
     console.log('🔄 Syncing database schema...')
-    execSync(`bunx prisma db push`, {
+    const result = spawnSync('bunx', ['prisma', 'db', 'push'], {
       stdio: 'pipe',
       env: { ...process.env, DATABASE_URL: dbUrl }
     })
+    
+    if (result.status !== 0) {
+      throw new Error(result.stderr?.toString() || 'prisma db push failed')
+    }
     console.log('✅ Database schema synced')
   } catch (err) {
-    console.error('⚠️ Schema sync failed, tables may already exist:', err)
-    // Continue - tables might already exist
+    console.error('⚠️ Schema sync failed, continuing with existing database state:', err)
+    // Continue - tables might already exist or there may be permission issues
   }
 }
 
