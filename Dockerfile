@@ -1,5 +1,5 @@
 # Build stage
-FROM node:24-slim AS builder
+FROM oven/bun:1 AS builder
 
 WORKDIR /app
 
@@ -7,22 +7,22 @@ WORKDIR /app
 ENV DATABASE_URL="file:./dev.db"
 
 # Copy package files
-COPY package*.json ./
+COPY package.json bun.lock* ./
 COPY prisma ./prisma/
 COPY prisma.config.ts ./
 
 # Install dependencies
-RUN npm install
+RUN bun install
 
 # Generate Prisma client
-RUN npx prisma generate
+RUN bunx prisma generate
 
 # Copy source and build
 COPY . .
-RUN npm run build
+RUN bun run build
 
 # Production stage
-FROM node:24-slim
+FROM oven/bun:1
 
 WORKDIR /app
 
@@ -38,8 +38,8 @@ COPY --from=builder /app/prisma.config.ts ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server ./server/
 COPY --from=builder /app/tsconfig.json ./
-COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/package.json ./
 
 EXPOSE 8080
 
-CMD ["npx", "tsx", "server/index.ts"]
+CMD ["bun", "server/index.ts"]
