@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { maintenanceApi } from '@/lib/api'
 import { MaintenanceEvent } from '@/lib/types'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { CheckCircle2, Clock, AlertTriangle, RotateCw, ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle2, Clock, ChevronDown, ChevronUp } from 'lucide-react'
 import { formatDate } from '@/lib/helpers'
 import { toast } from 'sonner'
 import { useState } from 'react'
@@ -60,7 +60,7 @@ export function UpcomingChecks({ vehicleId }: UpcomingChecksProps) {
     return event.scheduledDate < today
   }
 
-  const isDueToday = (event: MaintenanceEvent) => {
+  const _isDueToday = (event: MaintenanceEvent) => {
     if (!event.scheduledDate) return false
     const today = new Date().toISOString().split('T')[0]
     return event.scheduledDate === today

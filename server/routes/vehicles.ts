@@ -61,7 +61,7 @@ vehiclesRouter.put(
         data,
       })
       return c.json(vehicle)
-    } catch (error) {
+    } catch (_error) {
       return c.json({ error: 'Vehicle not found' }, 404)
     }
   }
@@ -76,7 +76,7 @@ vehiclesRouter.delete('/:id', async (c) => {
       where: { id },
     })
     return c.json({ success: true })
-  } catch (error) {
+  } catch (_error) {
     return c.json({ error: 'Vehicle not found' }, 404)
   }
 })

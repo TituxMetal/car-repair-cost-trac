@@ -102,7 +102,7 @@ maintenanceRouter.post(
   async (c) => {
     const data = c.req.valid('json')
     
-    const events = await prisma.maintenanceEvent.createMany({
+    const _events = await prisma.maintenanceEvent.createMany({
       data,
     })
     
@@ -130,7 +130,7 @@ maintenanceRouter.put(
         data,
       })
       return c.json(event)
-    } catch (error) {
+    } catch (_error) {
       return c.json({ error: 'Maintenance event not found' }, 404)
     }
   }
@@ -360,7 +360,7 @@ maintenanceRouter.delete('/:id', async (c) => {
       where: { id },
     })
     return c.json({ success: true })
-  } catch (error) {
+  } catch (_error) {
     return c.json({ error: 'Maintenance event not found' }, 404)
   }
 })

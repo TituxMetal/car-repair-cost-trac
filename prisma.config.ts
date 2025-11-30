@@ -2,7 +2,7 @@ import { defineConfig, env } from 'prisma/config'
 
 try {
   process.loadEnvFile('.env')
-} catch (error) {
+} catch (_error) {
   // .env is optional, DATABASE_URL can come from environment variables
 }
 

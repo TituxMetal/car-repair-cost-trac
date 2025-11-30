@@ -33,7 +33,7 @@ export const RecurringReminderList = ({
     )
   }
 
-  const getRecurrenceDescription = (reminder: RecurringReminder): string => {
+  const _getRecurrenceDescription = (reminder: RecurringReminder): string => {
     const parts: string[] = []
     
     if (reminder.recurrenceType === 'time' || reminder.recurrenceType === 'both') {

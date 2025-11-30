@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Vehicle, MaintenanceEvent, Expense, Budget } from '@/lib/types'
+import { Vehicle, MaintenanceEvent, Expense, Budget, MaintenanceType, MaintenanceStatus, MaintenanceRecurrenceType } from '@/lib/types'
 import { defaultWeeklyChecks } from '@/lib/helpers'
 import { ApiError } from '@/lib/api'
 import {
@@ -93,7 +93,7 @@ function App() {
         toast.success('Vehicle updated successfully')
       } else {
         // Create new vehicle
-        const { id, ...vehicleWithoutId } = vehicleData
+        const { id: _id, ...vehicleWithoutId } = vehicleData
         const newVehicle = await createVehicle.mutateAsync(vehicleWithoutId)
         
         // Create default weekly checks
@@ -101,16 +101,16 @@ function App() {
         nextWeek.setDate(nextWeek.getDate() + 7)
         const scheduledDate = nextWeek.toISOString().split('T')[0]
         
-        const weeklyChecks = defaultWeeklyChecks.map(check => ({
+        const weeklyChecks: Omit<MaintenanceEvent, 'id' | 'createdAt'>[] = defaultWeeklyChecks.map(check => ({
           vehicleId: newVehicle.id,
           category: check.category,
-          type: 'weekly-check' as const,
+          type: 'weekly-check' as MaintenanceType,
           title: check.title,
           description: check.description,
           scheduledDate,
-          status: 'scheduled' as const,
+          status: 'scheduled' as MaintenanceStatus,
           isRecurring: true,
-          recurrenceType: 'weekly' as const,
+          recurrenceType: 'weekly' as MaintenanceRecurrenceType,
           recurrenceValue: 1,
         }))
         
@@ -125,7 +125,7 @@ function App() {
 
   const handleSaveMaintenanceEvent = async (event: MaintenanceEvent) => {
     try {
-      const { id, createdAt, ...eventData } = event
+      const { id: _id, createdAt: _createdAt, ...eventData } = event
       
       if (maintenanceEvents.find(e => e.id === event.id)) {
         await updateMaintenanceEvent.mutateAsync({ id: event.id, data: eventData })
@@ -141,7 +141,7 @@ function App() {
 
   const handleSaveExpense = async (expense: Expense) => {
     try {
-      const { id, ...expenseData } = expense
+      const { id: _id, ...expenseData } = expense
       
       if (expenses.find(e => e.id === expense.id)) {
         await updateExpense.mutateAsync({ id: expense.id, data: expenseData })
