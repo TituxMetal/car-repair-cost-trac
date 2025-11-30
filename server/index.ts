@@ -81,6 +81,7 @@ if (existsSync(distPath)) {
 
 const port = Number(process.env.PORT) || 3001
 const hostname = process.env.HOSTNAME || process.env.HOST || '0.0.0.0'
+const isProduction = process.env.NODE_ENV === 'production'
 
 let server: ReturnType<typeof Bun.serve> | null = null
 
@@ -125,7 +126,7 @@ const start = async () => {
   } catch (err) {
     console.error('❌ Database initialization failed:', err)
     // In production, exit if database fails to initialize
-    if (process.env.NODE_ENV === 'production') {
+    if (isProduction) {
       console.error('💀 Exiting due to database failure in production')
       process.exit(1)
     }
