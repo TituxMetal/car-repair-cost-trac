@@ -3,6 +3,9 @@ FROM node:24-slim AS builder
 
 WORKDIR /app
 
+# Dummy URL for prisma generate (not used, just satisfies config validation)
+ENV DATABASE_URL="file:./dev.db"
+
 # Copy package files
 COPY package*.json ./
 COPY prisma ./prisma/
@@ -11,7 +14,7 @@ COPY prisma.config.ts ./
 # Install dependencies
 RUN npm install
 
-# Generate Prisma client (no valid DB needed here)
+# Generate Prisma client
 RUN npx prisma generate
 
 # Copy source and build
@@ -39,4 +42,4 @@ COPY package*.json ./
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "npx prisma db push && npx tsx server/index.ts"]
+CMD ["npx", "tsx", "server/index.ts"]
