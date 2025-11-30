@@ -1,5 +1,4 @@
-import { serve } from '@hono/node-server'
-import { serveStatic } from '@hono/node-server/serve-static'
+import { serveStatic } from 'hono/bun'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
@@ -8,7 +7,7 @@ import { maintenanceRouter } from './routes/maintenance'
 import { expensesRouter } from './routes/expenses'
 import { budgetsRouter } from './routes/budgets'
 import { prisma } from './db/prisma'
-import { readFileSync, existsSync } from 'fs'
+import { existsSync } from 'fs'
 import { join } from 'path'
 
 const app = new Hono()
@@ -58,15 +57,21 @@ if (existsSync(distPath)) {
   app.get('/vite.svg', serveStatic({ root: './dist' }))
   
   // SPA fallback - serve index.html for all other non-API routes
-  app.get('*', (c) => {
+  app.get('*', async (c) => {
     // Skip API routes
     if (c.req.path.startsWith('/api')) {
       return c.json({ error: 'Not found' }, 404)
     }
     const indexPath = join(distPath, 'index.html')
     if (existsSync(indexPath)) {
-      const html = readFileSync(indexPath, 'utf-8')
-      return c.html(html)
+      try {
+        const file = Bun.file(indexPath)
+        const html = await file.text()
+        return c.html(html)
+      } catch (err) {
+        console.error('Failed to read index.html:', err)
+        return c.json({ error: 'Failed to load frontend' }, 500)
+      }
     }
     return c.json({ error: 'Frontend not found' }, 404)
   })
@@ -95,13 +100,19 @@ const start = async () => {
     // Continue anyway - queries will be slow but will work
   }
   
-  serve({
-    fetch: app.fetch,
-    port,
-    hostname,
-  }, (info) => {
-    console.log(`🚀 Server is listening on http://${hostname}:${info.port}`)
-  })
+  // Use Bun's native serve instead of @hono/node-server
+  try {
+    const server = Bun.serve({
+      fetch: app.fetch,
+      port,
+      hostname,
+    })
+    
+    console.log(`🚀 Server is listening on http://${hostname}:${server.port}`)
+  } catch (err) {
+    console.error('❌ Failed to start server:', err)
+    throw err
+  }
 }
 
 start().catch((err) => {
