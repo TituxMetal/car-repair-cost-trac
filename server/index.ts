@@ -6,7 +6,7 @@ import { vehiclesRouter } from './routes/vehicles'
 import { maintenanceRouter } from './routes/maintenance'
 import { expensesRouter } from './routes/expenses'
 import { budgetsRouter } from './routes/budgets'
-import { prisma } from './db/prisma'
+import { prisma, initDatabase } from './db/prisma'
 import { existsSync } from 'fs'
 import { join } from 'path'
 
@@ -82,11 +82,38 @@ if (existsSync(distPath)) {
 const port = Number(process.env.PORT) || 3001
 const hostname = process.env.HOSTNAME || process.env.HOST || '0.0.0.0'
 
+let server: ReturnType<typeof Bun.serve> | null = null
+
+const shutdown = async () => {
+  console.log('\n🛑 Shutting down gracefully...')
+  
+  if (server) {
+    server.stop()
+    console.log('✅ Server stopped')
+  }
+  
+  try {
+    await prisma.$disconnect()
+    console.log('✅ Database disconnected')
+  } catch (err) {
+    console.error('❌ Error disconnecting database:', err)
+  }
+  
+  process.exit(0)
+}
+
+// Handle graceful shutdown signals
+process.on('SIGTERM', shutdown)
+process.on('SIGINT', shutdown)
+
 const start = async () => {
-  console.log('⏳ Warming up database connection...')
+  console.log('⏳ Initializing database...')
   const startTime = Date.now()
   
   try {
+    // Ensure database directory exists and initialize schema
+    await initDatabase()
+    
     await prisma.$connect()
     // Run actual queries to warm up the query engine for each model
     await Promise.all([
@@ -96,13 +123,19 @@ const start = async () => {
     ])
     console.log(`✅ Database ready in ${Date.now() - startTime}ms`)
   } catch (err) {
-    console.error('❌ Database warmup failed:', err)
-    // Continue anyway - queries will be slow but will work
+    console.error('❌ Database initialization failed:', err)
+    // In production, exit if database fails to initialize
+    if (process.env.NODE_ENV === 'production') {
+      console.error('💀 Exiting due to database failure in production')
+      process.exit(1)
+    }
+    // In development, continue anyway for API-only mode
+    console.log('⚠️ Continuing in API-only mode...')
   }
   
   // Use Bun's native serve instead of @hono/node-server
   try {
-    const server = Bun.serve({
+    server = Bun.serve({
       fetch: app.fetch,
       port,
       hostname,
