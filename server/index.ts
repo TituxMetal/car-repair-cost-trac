@@ -75,7 +75,7 @@ if (existsSync(distPath)) {
 }
 
 const port = Number(process.env.PORT) || 3001
-const hostname = '0.0.0.0'
+const hostname = process.env.HOST || '0.0.0.0'
 
 const start = async () => {
   console.log('⏳ Warming up database connection...')
@@ -95,12 +95,12 @@ const start = async () => {
     // Continue anyway - queries will be slow but will work
   }
   
-  console.log(`🚀 Server is running on http://${hostname}:${port}`)
-  
   serve({
     fetch: app.fetch,
     port,
     hostname,
+  }, (info) => {
+    console.log(`🚀 Server is listening on http://${info.address}:${info.port}`)
   })
 }
 
