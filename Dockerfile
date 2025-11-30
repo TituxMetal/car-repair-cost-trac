@@ -1,5 +1,5 @@
 # Build stage
-FROM oven/bun:latest AS builder
+FROM oven/bun:1.3 AS builder
 
 WORKDIR /app
 
@@ -15,14 +15,14 @@ COPY prisma.config.ts ./
 RUN bun install
 
 # Generate Prisma client
-RUN bunx prisma generate
+RUN bunx --bun prisma generate
 
 # Copy source and build
 COPY . .
 RUN bun run build
 
 # Production stage
-FROM oven/bun:latest
+FROM oven/bun:1.3
 
 WORKDIR /app
 
