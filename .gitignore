@@ -41,3 +41,4 @@ dev.db-journal
 
 .spark-workbench-id
 generated/
+.bun
