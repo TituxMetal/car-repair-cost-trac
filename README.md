@@ -23,7 +23,7 @@ curl -fsSL https://bun.sh/install | bash
 | `bun install` | Install all dependencies |
 | `bun run dev` | Start the Vite development server |
 | `bun run dev:server` | Start the backend server with hot reload |
-| `bun run dev:all` | Start both frontend and backend servers concurrently |
+| `bun run dev:all` | Start both frontend and backend servers concurrently (Unix/Linux) |
 | `bun run build` | Build for production (TypeScript + Vite) |
 | `bun run lint` | Run ESLint |
 | `bun run preview` | Preview the production build |
@@ -56,6 +56,7 @@ curl -fsSL https://bun.sh/install | bash
 Right now, this is just a starting point — the perfect place to begin building and testing your Spark applications.
 
 🧹 Just Exploring?
+
 No problem! If you were just checking things out and don't need to keep this code:
 
 - Simply delete your Spark.
