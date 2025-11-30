@@ -7,6 +7,7 @@ import { vehiclesRouter } from './routes/vehicles'
 import { maintenanceRouter } from './routes/maintenance'
 import { expensesRouter } from './routes/expenses'
 import { budgetsRouter } from './routes/budgets'
+import { prisma } from './db/prisma'
 import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
 
@@ -75,12 +76,37 @@ if (existsSync(distPath)) {
 
 const port = Number(process.env.PORT) || 3001
 const hostname = '0.0.0.0'
-console.log(`🚀 Server is running on http://${hostname}:${port}`)
 
-serve({
-  fetch: app.fetch,
-  port,
-  hostname,
+const start = async () => {
+  console.log('⏳ Warming up database connection...')
+  const startTime = Date.now()
+  
+  try {
+    await prisma.$connect()
+    // Run actual queries to warm up the query engine for each model
+    await Promise.all([
+      prisma.vehicle.count(),
+      prisma.maintenanceEvent.count(),
+      prisma.expense.count(),
+    ])
+    console.log(`✅ Database ready in ${Date.now() - startTime}ms`)
+  } catch (err) {
+    console.error('❌ Database warmup failed:', err)
+    // Continue anyway - queries will be slow but will work
+  }
+  
+  console.log(`🚀 Server is running on http://${hostname}:${port}`)
+  
+  serve({
+    fetch: app.fetch,
+    port,
+    hostname,
+  })
+}
+
+start().catch((err) => {
+  console.error('Failed to start server:', err)
+  process.exit(1)
 })
 
 export default app
