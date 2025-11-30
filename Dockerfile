@@ -36,9 +36,9 @@ COPY --from=builder /app/generated ./generated
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./
 COPY --from=builder /app/dist ./dist
-COPY server ./server/
-COPY tsconfig.json ./
-COPY package*.json ./
+COPY --from=builder /app/server ./server/
+COPY --from=builder /app/tsconfig.json ./
+COPY --from=builder /app/package*.json ./
 
 EXPOSE 8080
 
