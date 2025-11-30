@@ -31,7 +31,7 @@ export type MaintenanceType = 'service' | 'part-replacement' | 'mileage-check' |
 
 export type MaintenanceStatus = 'scheduled' | 'completed' | 'overdue'
 
-export type RecurrenceType = 'weekly' | 'monthly' | 'mileage'
+export type RecurrenceType = 'mileage' | 'time' | 'both'
 
 export interface MaintenanceEvent {
   id: string
@@ -76,8 +76,6 @@ export interface Budget {
   period: 'monthly' | 'yearly'
   startDate: string
 }
-
-export type RecurrenceType = 'mileage' | 'time' | 'both'
 
 export interface RecurringReminder {
   id: string
