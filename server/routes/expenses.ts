@@ -82,7 +82,7 @@ expensesRouter.put(
         },
       })
       return c.json(expense)
-    } catch (error) {
+    } catch (_error) {
       return c.json({ error: 'Expense not found' }, 404)
     }
   }
@@ -97,7 +97,7 @@ expensesRouter.delete('/:id', async (c) => {
       where: { id },
     })
     return c.json({ success: true })
-  } catch (error) {
+  } catch (_error) {
     return c.json({ error: 'Expense not found' }, 404)
   }
 })

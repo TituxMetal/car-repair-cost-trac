@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { CurrencyDollar, PencilSimple, Warning } from '@phosphor-icons/react'
@@ -38,7 +37,7 @@ export const BudgetOverview = ({ budget, actualSpending, onUpdateBudget }: Budge
   const remaining = budgetAmount - actualSpending
   const isOverBudget = actualSpending > budgetAmount
 
-  const getProgressColor = () => {
+  const _getProgressColor = () => {
     if (percentage >= 100) return 'bg-destructive'
     if (percentage >= 80) return 'bg-accent'
     return 'bg-primary'

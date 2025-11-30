@@ -55,7 +55,7 @@ budgetsRouter.put(
         data,
       })
       return c.json(budget)
-    } catch (error) {
+    } catch (_error) {
       return c.json({ error: 'Budget not found' }, 404)
     }
   }
@@ -70,7 +70,7 @@ budgetsRouter.delete('/:id', async (c) => {
       where: { id },
     })
     return c.json({ success: true })
-  } catch (error) {
+  } catch (_error) {
     return c.json({ error: 'Budget not found' }, 404)
   }
 })

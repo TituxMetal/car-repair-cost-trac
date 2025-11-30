@@ -43,7 +43,7 @@ export const RecurringReminderForm = ({ vehicleId, reminder, onSave, onCancel }:
     }
   }
 
-  const handleChange = (field: keyof RecurringReminder, value: any) => {
+  const handleChange = (field: keyof RecurringReminder, value: RecurringReminder[keyof RecurringReminder]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 

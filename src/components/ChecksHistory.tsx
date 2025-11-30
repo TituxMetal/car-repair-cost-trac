@@ -26,7 +26,7 @@ const categoryLabels: Record<string, string> = {
 }
 
 // Get week number from date
-function getWeekNumber(dateStr: string): number {
+function _getWeekNumber(dateStr: string): number {
   const date = new Date(dateStr)
   const startOfYear = new Date(date.getFullYear(), 0, 1)
   const days = Math.floor((date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000))
