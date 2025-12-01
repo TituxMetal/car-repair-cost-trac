@@ -45,14 +45,15 @@ COPY --from=builder /app/package.json ./
 # Copy template database for initialization
 COPY --from=builder /app/dev.db ./template.db
 
-# Create entrypoint script
+# Create entrypoint script that extracts database path from DATABASE_URL
 RUN echo '#!/bin/sh\n\
-# Initialize database if it does not exist\n\
-if [ ! -f /data/prod.db ]; then\n\
+# Extract database path from DATABASE_URL (format: file:/path/to/db)\n\
+DB_PATH=$(echo "$DATABASE_URL" | sed "s|^file:||")\n\
+if [ -n "$DB_PATH" ] && [ ! -f "$DB_PATH" ]; then\n\
   echo "📁 Initializing database from template..."\n\
-  mkdir -p /data\n\
-  cp /app/template.db /data/prod.db\n\
-  echo "✅ Database initialized"\n\
+  mkdir -p "$(dirname "$DB_PATH")"\n\
+  cp /app/template.db "$DB_PATH"\n\
+  echo "✅ Database initialized at $DB_PATH"\n\
 fi\n\
 exec "$@"' > /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
 
