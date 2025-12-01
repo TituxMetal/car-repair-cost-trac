@@ -1,6 +1,8 @@
 import { existsSync, mkdirSync, writeFileSync } from 'fs'
 import { join } from 'path'
-import tailwind from 'bun-plugin-tailwind'
+import { createHash } from 'crypto'
+import { $ } from 'bun'
+import type { BunPlugin } from 'bun'
 
 const projectRoot = import.meta.dirname
 
@@ -13,8 +15,44 @@ if (!existsSync(assetsPath)) {
 
 console.log('🔨 Building frontend with Bun...')
 
-// Build JavaScript and CSS with Bun using Tailwind plugin
-console.log('📦 Building with Bun and Tailwind...')
+// Step 1: Build CSS with Tailwind CLI
+console.log('🎨 Building CSS with Tailwind CLI...')
+const cssInputPath = join(projectRoot, 'src/main.css')
+const cssTempOutputPath = join(assetsPath, 'styles.css')
+
+try {
+  await $`npx @tailwindcss/cli -i ${cssInputPath} -o ${cssTempOutputPath} --minify`.quiet()
+  console.log('✅ CSS build successful')
+} catch (error) {
+  console.error('❌ CSS build failed:', error)
+  process.exit(1)
+}
+
+// Generate hash for CSS file for cache busting
+const cssContent = await Bun.file(cssTempOutputPath).text()
+const cssHash = createHash('md5').update(cssContent).digest('hex').slice(0, 8)
+const cssFileName = `styles.${cssHash}.css`
+const cssFinalPath = join(assetsPath, cssFileName)
+
+// Rename CSS file with hash
+await Bun.write(cssFinalPath, cssContent)
+await $`rm ${cssTempOutputPath}`.quiet()
+
+// Plugin to ignore CSS imports (they are handled by Tailwind CLI)
+const ignoreCssPlugin: BunPlugin = {
+  name: 'ignore-css',
+  setup(build) {
+    build.onLoad({ filter: /\.css$/ }, () => {
+      return {
+        contents: '',
+        loader: 'js'
+      }
+    })
+  }
+}
+
+// Step 2: Build JavaScript with Bun (without tailwind plugin since CSS is handled separately)
+console.log('📦 Building JavaScript with Bun...')
 const result = await Bun.build({
   entrypoints: [join(projectRoot, 'src/main.tsx')],
   outdir: join(projectRoot, 'dist/assets'),
@@ -31,23 +69,22 @@ const result = await Bun.build({
   define: {
     'process.env.NODE_ENV': JSON.stringify('production')
   },
-  plugins: [tailwind]
+  plugins: [ignoreCssPlugin]
 })
 
 if (!result.success) {
-  console.error('❌ Build failed:')
+  console.error('❌ JavaScript build failed:')
   for (const log of result.logs) {
     console.error(log)
   }
   process.exit(1)
 }
 
-console.log('✅ Build successful')
+console.log('✅ JavaScript build successful')
 
 // Find the generated entry files
 const outputs = result.outputs
 const mainEntry = outputs.find(o => o.path.includes('main') && o.path.endsWith('.js'))
-const cssEntries = outputs.filter(o => o.path.endsWith('.css'))
 
 if (!mainEntry) {
   console.error('❌ No main JavaScript entry found in build output')
@@ -55,16 +92,6 @@ if (!mainEntry) {
 }
 
 const mainJsFileName = mainEntry.path.split('/').pop()!
-
-// Generate CSS links for all CSS files
-const cssLinks = cssEntries
-  .map(css => {
-    const fileName = css.path.split('/').pop()
-    if (!fileName) return null
-    return `<link href="/assets/${fileName}" rel="stylesheet" />`
-  })
-  .filter(Boolean)
-  .join('\n    ')
 
 // Generate index.html
 console.log('📄 Generating index.html...')
@@ -77,7 +104,7 @@ const indexHtml = `<!DOCTYPE html>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    ${cssLinks}
+    <link href="/assets/${cssFileName}" rel="stylesheet" />
 </head>
 <body>
     <div id="root"></div>
@@ -91,8 +118,4 @@ writeFileSync(join(distPath, 'index.html'), indexHtml)
 console.log('✅ Build completed successfully!')
 console.log(`📁 Output: ${distPath}`)
 console.log(`📦 JS: ${mainJsFileName}`)
-if (cssEntries.length > 0) {
-  console.log(`🎨 CSS: ${cssEntries.map(c => c.path.split('/').pop()).join(', ')}`)
-} else {
-  console.log('⚠️ No CSS files generated - styles may be inlined or missing')
-}
+console.log(`🎨 CSS: ${cssFileName}`)
