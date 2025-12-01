@@ -17,6 +17,9 @@ RUN bun install
 # Generate Prisma client
 RUN bunx prisma generate
 
+# Create a template database with schema
+RUN bunx prisma db push --accept-data-loss
+
 # Copy source and build
 COPY . .
 RUN bun build.ts
@@ -39,7 +42,21 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server ./server/
 COPY --from=builder /app/tsconfig.json ./
 COPY --from=builder /app/package.json ./
+# Copy template database for initialization
+COPY --from=builder /app/dev.db ./template.db
+
+# Create entrypoint script
+RUN echo '#!/bin/sh\n\
+# Initialize database if it does not exist\n\
+if [ ! -f /data/prod.db ]; then\n\
+  echo "📁 Initializing database from template..."\n\
+  mkdir -p /data\n\
+  cp /app/template.db /data/prod.db\n\
+  echo "✅ Database initialized"\n\
+fi\n\
+exec "$@"' > /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 8080
 
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["bun", "server/index.ts"]
