@@ -1,5 +1,5 @@
 # Build stage
-FROM oven/bun:1 AS builder
+FROM oven/bun:latest AS builder
 
 WORKDIR /app
 
@@ -19,10 +19,10 @@ RUN bunx prisma generate
 
 # Copy source and build
 COPY . .
-RUN bun run build
+RUN bun build.ts
 
 # Production stage
-FROM oven/bun:1
+FROM oven/bun:latest
 
 WORKDIR /app
 
