@@ -1,7 +1,6 @@
-import { existsSync, mkdirSync, writeFileSync } from 'fs'
+import { existsSync, mkdirSync, writeFileSync, unlinkSync } from 'fs'
 import { join } from 'path'
 import { createHash } from 'crypto'
-import { $ } from 'bun'
 import type { BunPlugin } from 'bun'
 
 const projectRoot = import.meta.dirname
@@ -21,14 +20,22 @@ const cssInputPath = join(projectRoot, 'src/main.css')
 const cssTempOutputPath = join(assetsPath, 'styles.css')
 
 try {
-  await $`npx @tailwindcss/cli -i ${cssInputPath} -o ${cssTempOutputPath} --minify`.quiet()
+  const proc = Bun.spawn(['npx', '@tailwindcss/cli', '-i', cssInputPath, '-o', cssTempOutputPath, '--minify'], {
+    cwd: projectRoot,
+    stdout: 'inherit',
+    stderr: 'inherit'
+  })
+  const exitCode = await proc.exited
+  if (exitCode !== 0) {
+    throw new Error(`Tailwind CLI exited with code ${exitCode}`)
+  }
   console.log('✅ CSS build successful')
 } catch (error) {
   console.error('❌ CSS build failed:', error)
   process.exit(1)
 }
 
-// Generate hash for CSS file for cache busting
+// Generate hash for CSS file for cache busting (MD5 is fine for non-security cache busting)
 const cssContent = await Bun.file(cssTempOutputPath).text()
 const cssHash = createHash('md5').update(cssContent).digest('hex').slice(0, 8)
 const cssFileName = `styles.${cssHash}.css`
@@ -36,7 +43,7 @@ const cssFinalPath = join(assetsPath, cssFileName)
 
 // Rename CSS file with hash
 await Bun.write(cssFinalPath, cssContent)
-await $`rm ${cssTempOutputPath}`.quiet()
+unlinkSync(cssTempOutputPath)
 
 // Plugin to ignore CSS imports (they are handled by Tailwind CLI)
 const ignoreCssPlugin: BunPlugin = {
