@@ -2,7 +2,6 @@ import { PrismaClient } from '../../generated/prisma'
 import { PrismaLibSql } from '@prisma/adapter-libsql'
 import { existsSync, mkdirSync } from 'fs'
 import { dirname } from 'path'
-import { spawnSync } from 'child_process'
 
 const dbUrl = process.env.DATABASE_URL || 'file:prisma/dev.db'
 const adapter = new PrismaLibSql({ url: dbUrl })
@@ -16,8 +15,9 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter })
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
 /**
- * Initialize the database by ensuring the directory exists and creating tables if needed.
- * This is important for Fly.io deployments where the /data volume needs to be initialized.
+ * Initialize the database by ensuring the directory exists.
+ * In production, we rely on the database schema being set up during Docker build.
+ * The Prisma client will create the database file on first connection if it doesn't exist.
  */
 export async function initDatabase(): Promise<void> {
   // Extract file path from DATABASE_URL (format: file:/path/to/db)
@@ -38,23 +38,10 @@ export async function initDatabase(): Promise<void> {
     }
   }
   
-  // Use Prisma's db push to ensure schema is up to date
-  // This creates tables if they don't exist
-  try {
-    console.log('🔄 Syncing database schema...')
-    const result = spawnSync('bunx', ['prisma', 'db', 'push'], {
-      stdio: 'pipe',
-      env: { ...process.env, DATABASE_URL: dbUrl }
-    })
-    
-    if (result.status !== 0) {
-      throw new Error(result.stderr?.toString() || 'prisma db push failed')
-    }
-    console.log('✅ Database schema synced')
-  } catch (err) {
-    console.error('⚠️ Schema sync failed, continuing with existing database state:', err)
-    // Continue - tables might already exist or there may be permission issues
-  }
+  // In production, skip runtime schema sync to avoid OOM issues on constrained environments.
+  // Schema should be applied during Docker build or manually before first deploy.
+  // For development, you can run `bun run db:push` manually.
+  console.log('✅ Database initialization complete')
 }
 
 export default prisma
