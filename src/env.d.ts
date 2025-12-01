@@ -1,0 +1,18 @@
+/// <reference types="bun-types" />
+
+// CSS module declarations
+declare module "*.css" {
+  const content: string;
+  export default content;
+}
+
+// Extend ImportMeta for Bun environment variables
+interface ImportMetaEnv {
+  readonly DEV: boolean;
+  readonly PROD: boolean;
+  readonly MODE: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
