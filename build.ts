@@ -47,13 +47,22 @@ console.log('✅ Build successful')
 // Find the generated entry files
 const outputs = result.outputs
 const mainEntry = outputs.find(o => o.path.includes('main') && o.path.endsWith('.js'))
-const cssEntry = outputs.find(o => o.path.endsWith('.css'))
+const cssEntries = outputs.filter(o => o.path.endsWith('.css'))
 const mainJsFileName = mainEntry ? mainEntry.path.split('/').pop() : 'main.js'
-const mainCssFileName = cssEntry ? cssEntry.path.split('/').pop() : null
+
+if (!mainEntry) {
+  console.error('❌ No main JavaScript entry found in build output')
+  process.exit(1)
+}
+
+// Generate CSS links for all CSS files
+const cssLinks = cssEntries.map(css => {
+  const fileName = css.path.split('/').pop()
+  return `<link href="/assets/${fileName}" rel="stylesheet" />`
+}).join('\n    ')
 
 // Generate index.html
 console.log('📄 Generating index.html...')
-const cssLink = mainCssFileName ? `<link href="/assets/${mainCssFileName}" rel="stylesheet" />` : ''
 const indexHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -63,7 +72,7 @@ const indexHtml = `<!DOCTYPE html>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    ${cssLink}
+    ${cssLinks}
 </head>
 <body>
     <div id="root"></div>
@@ -77,6 +86,8 @@ writeFileSync(join(distPath, 'index.html'), indexHtml)
 console.log('✅ Build completed successfully!')
 console.log(`📁 Output: ${distPath}`)
 console.log(`📦 JS: ${mainJsFileName}`)
-if (mainCssFileName) {
-  console.log(`🎨 CSS: ${mainCssFileName}`)
+if (cssEntries.length > 0) {
+  console.log(`🎨 CSS: ${cssEntries.map(c => c.path.split('/').pop()).join(', ')}`)
+} else {
+  console.log('⚠️ No CSS files generated - styles may be inlined or missing')
 }
