@@ -48,18 +48,23 @@ console.log('✅ Build successful')
 const outputs = result.outputs
 const mainEntry = outputs.find(o => o.path.includes('main') && o.path.endsWith('.js'))
 const cssEntries = outputs.filter(o => o.path.endsWith('.css'))
-const mainJsFileName = mainEntry ? mainEntry.path.split('/').pop() : 'main.js'
 
 if (!mainEntry) {
   console.error('❌ No main JavaScript entry found in build output')
   process.exit(1)
 }
 
+const mainJsFileName = mainEntry.path.split('/').pop()!
+
 // Generate CSS links for all CSS files
-const cssLinks = cssEntries.map(css => {
-  const fileName = css.path.split('/').pop()
-  return `<link href="/assets/${fileName}" rel="stylesheet" />`
-}).join('\n    ')
+const cssLinks = cssEntries
+  .map(css => {
+    const fileName = css.path.split('/').pop()
+    if (!fileName) return null
+    return `<link href="/assets/${fileName}" rel="stylesheet" />`
+  })
+  .filter(Boolean)
+  .join('\n    ')
 
 // Generate index.html
 console.log('📄 Generating index.html...')
