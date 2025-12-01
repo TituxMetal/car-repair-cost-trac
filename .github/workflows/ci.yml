@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -62,7 +62,7 @@ jobs:
       - name: Generate Prisma client
         env:
           DATABASE_URL: "file:./dev.db"
-        run: bunx prisma generate
+        run: bunx --bun prisma generate
 
       - name: Run build
         run: bun run build
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -93,17 +93,17 @@ jobs:
       - name: Generate Prisma client
         env:
           DATABASE_URL: "file:./dev.db"
-        run: bunx prisma generate
+        run: bunx --bun prisma generate
 
       - name: Run type check
-        run: bunx tsc --noEmit
+        run: bunx --bun tsc --noEmit
 
   docker:
     name: Docker Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build Docker image
         run: docker build -t car-repair-cost-trac .
