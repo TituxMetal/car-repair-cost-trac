@@ -15,10 +15,10 @@ COPY prisma.config.ts ./
 RUN bun install
 
 # Generate Prisma client
-RUN bunx prisma generate
+RUN bunx --bun prisma generate
 
-# Create a template database with schema
-RUN bunx prisma db push --accept-data-loss
+# Create a template database with schema (only used for initial setup, not migrations)
+RUN bunx --bun prisma db push --accept-data-loss
 
 # Copy source and build
 COPY . .
