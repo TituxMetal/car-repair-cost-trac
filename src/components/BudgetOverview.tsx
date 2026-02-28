@@ -10,6 +10,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { CurrencyDollar, PencilSimple, Warning } from '@phosphor-icons/react'
 
+const getStartDateForPeriod = (p: 'monthly' | 'yearly'): string => {
+  const now = new Date()
+  if (p === 'monthly') return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+  return `${now.getFullYear()}-01-01`
+}
+
 interface BudgetOverviewProps {
   budget?: Budget & { currentSpending?: number }
   actualSpending?: number
@@ -29,12 +35,15 @@ export const BudgetOverview = ({ budget, actualSpending, onUpdateBudget }: Budge
   }, [budget])
 
   const handleSave = () => {
+    const startDate = period !== budget?.period
+      ? getStartDateForPeriod(period)
+      : budget?.startDate || new Date().toISOString()
     onUpdateBudget({
       id: budget?.id || `budget-${Date.now()}`,
       vehicleId: budget?.vehicleId || '',
       amount,
       period,
-      startDate: budget?.startDate || new Date().toISOString()
+      startDate
     })
     setIsEditDialogOpen(false)
   }
@@ -42,14 +51,10 @@ export const BudgetOverview = ({ budget, actualSpending, onUpdateBudget }: Budge
   const handlePeriodToggle = (newPeriod: 'monthly' | 'yearly') => {
     if (!budget || newPeriod === budget.period) return
     setPeriod(newPeriod)
-    const now = new Date()
-    const startDate = newPeriod === 'monthly'
-      ? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-      : `${now.getFullYear()}-01-01`
-    onUpdateBudget({ ...budget, period: newPeriod, startDate })
+    onUpdateBudget({ ...budget, period: newPeriod, startDate: getStartDateForPeriod(newPeriod) })
   }
 
-  const currentPeriod = budget?.period || 'yearly'
+  const currentPeriod = period
   const spending = budget?.currentSpending ?? actualSpending ?? 0
   const budgetAmount = budget?.amount || 0
   const rawPercentage = budgetAmount > 0 ? (spending / budgetAmount) * 100 : 0
@@ -75,12 +80,16 @@ export const BudgetOverview = ({ budget, actualSpending, onUpdateBudget }: Budge
             {budget && (
               <div className="flex rounded-md border border-border overflow-hidden text-xs">
                 <button
+                  type="button"
+                  aria-pressed={currentPeriod === 'monthly'}
                   onClick={() => handlePeriodToggle('monthly')}
                   className={`px-2 py-1 transition-colors ${currentPeriod === 'monthly' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
                 >
                   Monthly
                 </button>
                 <button
+                  type="button"
+                  aria-pressed={currentPeriod === 'yearly'}
                   onClick={() => handlePeriodToggle('yearly')}
                   className={`px-2 py-1 transition-colors ${currentPeriod === 'yearly' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
                 >
@@ -166,7 +175,7 @@ export const BudgetOverview = ({ budget, actualSpending, onUpdateBudget }: Budge
               </div>
               {isOverBudget && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  You've exceeded your budget by {rawPercentage.toFixed(0)}%
+                  You've exceeded your budget by {Math.max(rawPercentage - 100, 0).toFixed(0)}%
                 </p>
               )}
             </div>
