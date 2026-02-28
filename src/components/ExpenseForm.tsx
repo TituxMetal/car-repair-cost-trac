@@ -43,6 +43,11 @@ export const ExpenseForm = ({ eventId, vehicleId, expense, onSave, onCancel, isS
       setTimeout(() => setShake(false), 400)
       return
     }
+    if (formData.partsCost < 0 || formData.laborCost < 0 || formData.otherCost < 0) {
+      setShake(true)
+      setTimeout(() => setShake(false), 400)
+      return
+    }
     const total = formData.partsCost + formData.laborCost + formData.otherCost
     onSave({ ...formData, totalCost: total })
   }
