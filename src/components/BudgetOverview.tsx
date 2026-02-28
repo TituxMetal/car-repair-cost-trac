@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Budget } from '@/lib/types'
 import { formatCurrency } from '@/lib/helpers'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,6 +21,13 @@ export const BudgetOverview = ({ budget, actualSpending, onUpdateBudget }: Budge
   const [amount, setAmount] = useState(budget?.amount || 1000)
   const [period, setPeriod] = useState<'monthly' | 'yearly'>(budget?.period || 'yearly')
 
+  useEffect(() => {
+    if (budget) {
+      setAmount(budget.amount)
+      setPeriod(budget.period)
+    }
+  }, [budget])
+
   const handleSave = () => {
     onUpdateBudget({
       id: budget?.id || `budget-${Date.now()}`,
@@ -34,6 +41,7 @@ export const BudgetOverview = ({ budget, actualSpending, onUpdateBudget }: Budge
 
   const handlePeriodToggle = (newPeriod: 'monthly' | 'yearly') => {
     if (!budget || newPeriod === budget.period) return
+    setPeriod(newPeriod)
     const now = new Date()
     const startDate = newPeriod === 'monthly'
       ? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
@@ -44,13 +52,14 @@ export const BudgetOverview = ({ budget, actualSpending, onUpdateBudget }: Budge
   const currentPeriod = budget?.period || 'yearly'
   const spending = budget?.currentSpending ?? actualSpending ?? 0
   const budgetAmount = budget?.amount || 0
-  const percentage = budgetAmount > 0 ? Math.min((spending / budgetAmount) * 100, 100) : 0
+  const rawPercentage = budgetAmount > 0 ? (spending / budgetAmount) * 100 : 0
+  const percentage = Math.min(rawPercentage, 100)
   const remaining = budgetAmount - spending
   const isOverBudget = spending > budgetAmount
 
   const getProgressColor = (): string => {
-    if (percentage >= 100) return '[&_[data-slot=progress-indicator]]:bg-destructive'
-    if (percentage >= 80) return '[&_[data-slot=progress-indicator]]:bg-amber-500'
+    if (rawPercentage >= 100) return '[&_[data-slot=progress-indicator]]:bg-destructive'
+    if (rawPercentage >= 80) return '[&_[data-slot=progress-indicator]]:bg-amber-500'
     return '[&_[data-slot=progress-indicator]]:bg-green-500'
   }
 
@@ -157,7 +166,7 @@ export const BudgetOverview = ({ budget, actualSpending, onUpdateBudget }: Budge
               </div>
               {isOverBudget && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  You've exceeded your budget by {percentage.toFixed(0)}%
+                  You've exceeded your budget by {rawPercentage.toFixed(0)}%
                 </p>
               )}
             </div>

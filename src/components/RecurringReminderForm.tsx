@@ -9,17 +9,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
+export type ReminderFormData = Omit<RecurringReminder, 'id'> & { id?: string }
+
 interface RecurringReminderFormProps {
   vehicleId: string
   reminder?: RecurringReminder
-  onSave: (reminder: RecurringReminder) => void
+  onSave: (reminder: ReminderFormData) => void
   onCancel?: () => void
 }
 
 export const RecurringReminderForm = ({ vehicleId, reminder, onSave, onCancel }: RecurringReminderFormProps) => {
-  const [formData, setFormData] = useState<RecurringReminder>(
+  const [formData, setFormData] = useState<ReminderFormData>(
     reminder || {
-      id: '',
       vehicleId,
       category: 'oil-change',
       title: '',
@@ -43,7 +44,7 @@ export const RecurringReminderForm = ({ vehicleId, reminder, onSave, onCancel }:
     }
   }
 
-  const handleChange = (field: keyof RecurringReminder, value: RecurringReminder[keyof RecurringReminder]) => {
+  const handleChange = (field: keyof ReminderFormData, value: ReminderFormData[keyof ReminderFormData]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
