@@ -48,6 +48,11 @@ export const MaintenanceEventForm = ({ vehicleId, event, onSave, onCancel, isSub
       setTimeout(() => setShake(false), 400)
       return
     }
+    if (formData.scheduledMileage !== undefined && formData.scheduledMileage < 0) {
+      setShake(true)
+      setTimeout(() => setShake(false), 400)
+      return
+    }
     onSave(formData)
   }
 
