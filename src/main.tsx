@@ -6,8 +6,6 @@ import App from './App.tsx'
 import { ErrorFallback } from './ErrorFallback.tsx'
 
 import "./main.css"
-import "./styles/theme.css"
-import "./index.css"
 
 const queryClient = new QueryClient({
   defaultOptions: {

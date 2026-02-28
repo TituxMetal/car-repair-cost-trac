@@ -106,7 +106,7 @@ const mainJsFileName = mainEntry.path.split('/').pop()!
 // Generate index.html
 console.log('📄 Generating index.html...')
 const indexHtml = `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
