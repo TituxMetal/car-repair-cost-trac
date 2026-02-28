@@ -40,6 +40,9 @@ export const MaintenanceEventForm = ({ vehicleId, event, onSave, onCancel, isSub
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSubmitting) {
+      return
+    }
     if (!formData.title || !formData.category) {
       setShake(true)
       setTimeout(() => setShake(false), 400)
@@ -59,7 +62,7 @@ export const MaintenanceEventForm = ({ vehicleId, event, onSave, onCancel, isSub
         <p className="text-sm text-muted-foreground mt-1">Plan your vehicle maintenance</p>
       </div>
       <div className="p-6">
-        <form onSubmit={handleSubmit} className={`space-y-5 ${shake ? 'animate-shake' : ''}`}>
+        <form noValidate onSubmit={handleSubmit} className={`space-y-5 ${shake ? 'animate-shake' : ''}`}>
           <div className="space-y-2">
             <Label htmlFor="title">Title *</Label>
             <Input
@@ -182,7 +185,7 @@ export const MaintenanceEventForm = ({ vehicleId, event, onSave, onCancel, isSub
           </div>
           
           <div className="flex gap-3 pt-2 border-t border-border">
-            <Button type="submit" className="flex-1 transition-all duration-150" size="lg" disabled={isSubmitting}>
+            <Button type="submit" className="flex-1 h-11 transition-all duration-150" size="lg" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Spinner className="animate-spin mr-2 h-4 w-4" />
@@ -193,7 +196,7 @@ export const MaintenanceEventForm = ({ vehicleId, event, onSave, onCancel, isSub
               )}
             </Button>
             {onCancel && (
-              <Button type="button" variant="secondary" onClick={onCancel} size="lg" className="transition-all duration-150">
+              <Button type="button" variant="secondary" onClick={onCancel} size="lg" className="h-11 transition-all duration-150">
                 Cancel
               </Button>
             )}

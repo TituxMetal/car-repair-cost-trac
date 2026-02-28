@@ -35,6 +35,9 @@ export const ExpenseForm = ({ eventId, vehicleId, expense, onSave, onCancel, isS
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSubmitting) {
+      return
+    }
     if (!formData.date) {
       setShake(true)
       setTimeout(() => setShake(false), 400)
@@ -57,7 +60,7 @@ export const ExpenseForm = ({ eventId, vehicleId, expense, onSave, onCancel, isS
         <p className="text-sm text-muted-foreground mt-1">Track your maintenance costs</p>
       </div>
       <div className="p-6">
-        <form onSubmit={handleSubmit} className={`space-y-5 ${shake ? 'animate-shake' : ''}`}>
+        <form noValidate onSubmit={handleSubmit} className={`space-y-5 ${shake ? 'animate-shake' : ''}`}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="date">Date *</Label>
@@ -144,7 +147,7 @@ export const ExpenseForm = ({ eventId, vehicleId, expense, onSave, onCancel, isS
           </div>
           
           <div className="flex gap-3 pt-2 border-t border-border">
-            <Button type="submit" className="flex-1 transition-all duration-150" size="lg" disabled={isSubmitting}>
+            <Button type="submit" className="flex-1 h-11 transition-all duration-150" size="lg" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Spinner className="animate-spin mr-2 h-4 w-4" />
@@ -155,7 +158,7 @@ export const ExpenseForm = ({ eventId, vehicleId, expense, onSave, onCancel, isS
               )}
             </Button>
             {onCancel && (
-              <Button type="button" variant="secondary" onClick={onCancel} size="lg" className="transition-all duration-150">
+              <Button type="button" variant="secondary" onClick={onCancel} size="lg" className="h-11 transition-all duration-150">
                 Cancel
               </Button>
             )}
