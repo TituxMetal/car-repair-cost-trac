@@ -2,6 +2,11 @@ import { useEffect } from 'react'
 import { RecurringReminder, MaintenanceEvent, Vehicle } from '@/lib/types'
 import { generateId, calculateNextDueDate, calculateNextDueMileage } from '@/lib/helpers'
 
+/**
+ * @deprecated This hook uses client-side event generation which is now handled by the backend
+ * via the /api/reminders/:vehicleId/generate-events endpoint. Integration will be completed
+ * when the remindersApi from @/lib/api is available. Use the backend API directly instead.
+ */
 export const useRecurringReminders = (
   reminders: RecurringReminder[],
   maintenanceEvents: MaintenanceEvent[],

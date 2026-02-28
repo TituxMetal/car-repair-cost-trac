@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { RecurringReminder, MaintenanceCategory, RecurrenceType } from '@/lib/types'
-import { generateId, maintenanceCategoryLabels } from '@/lib/helpers'
+import { maintenanceCategoryLabels } from '@/lib/helpers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,7 +19,7 @@ interface RecurringReminderFormProps {
 export const RecurringReminderForm = ({ vehicleId, reminder, onSave, onCancel }: RecurringReminderFormProps) => {
   const [formData, setFormData] = useState<RecurringReminder>(
     reminder || {
-      id: generateId(),
+      id: '',
       vehicleId,
       category: 'oil-change',
       title: '',

@@ -11,8 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CurrencyDollar, PencilSimple, Warning } from '@phosphor-icons/react'
 
 interface BudgetOverviewProps {
-  budget?: Budget
-  actualSpending: number
+  budget?: Budget & { currentSpending?: number }
+  actualSpending?: number
   onUpdateBudget: (budget: Budget) => void
 }
 
@@ -32,15 +32,26 @@ export const BudgetOverview = ({ budget, actualSpending, onUpdateBudget }: Budge
     setIsEditDialogOpen(false)
   }
 
-  const budgetAmount = budget?.amount || 0
-  const percentage = budgetAmount > 0 ? Math.min((actualSpending / budgetAmount) * 100, 100) : 0
-  const remaining = budgetAmount - actualSpending
-  const isOverBudget = actualSpending > budgetAmount
+  const handlePeriodToggle = (newPeriod: 'monthly' | 'yearly') => {
+    if (!budget || newPeriod === budget.period) return
+    const now = new Date()
+    const startDate = newPeriod === 'monthly'
+      ? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+      : `${now.getFullYear()}-01-01`
+    onUpdateBudget({ ...budget, period: newPeriod, startDate })
+  }
 
-  const _getProgressColor = () => {
-    if (percentage >= 100) return 'bg-destructive'
-    if (percentage >= 80) return 'bg-accent'
-    return 'bg-primary'
+  const currentPeriod = budget?.period || 'yearly'
+  const spending = budget?.currentSpending ?? actualSpending ?? 0
+  const budgetAmount = budget?.amount || 0
+  const percentage = budgetAmount > 0 ? Math.min((spending / budgetAmount) * 100, 100) : 0
+  const remaining = budgetAmount - spending
+  const isOverBudget = spending > budgetAmount
+
+  const getProgressColor = (): string => {
+    if (percentage >= 100) return '[&_[data-slot=progress-indicator]]:bg-destructive'
+    if (percentage >= 80) return '[&_[data-slot=progress-indicator]]:bg-amber-500'
+    return '[&_[data-slot=progress-indicator]]:bg-green-500'
   }
 
   return (
@@ -51,50 +62,68 @@ export const BudgetOverview = ({ budget, actualSpending, onUpdateBudget }: Budge
             <CurrencyDollar className="text-accent" size={24} />
             <CardTitle>Budget Overview</CardTitle>
           </div>
-          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="secondary" size="sm">
-                <PencilSimple size={16} />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Set Budget</DialogTitle>
-                <DialogDescription>Define your maintenance budget</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="budget-amount">Budget Amount (€)</Label>
-                  <Input
-                    id="budget-amount"
-                    type="number"
-                    step="10"
-                    min="0"
-                    value={amount}
-                    onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="budget-period">Period</Label>
-                  <Select value={period} onValueChange={(value) => setPeriod(value as 'monthly' | 'yearly')}>
-                    <SelectTrigger id="budget-period">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="yearly">Yearly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button onClick={handleSave} className="w-full">
-                  Save Budget
-                </Button>
+          <div className="flex items-center gap-2">
+            {budget && (
+              <div className="flex rounded-md border border-border overflow-hidden text-xs">
+                <button
+                  onClick={() => handlePeriodToggle('monthly')}
+                  className={`px-2 py-1 transition-colors ${currentPeriod === 'monthly' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => handlePeriodToggle('yearly')}
+                  className={`px-2 py-1 transition-colors ${currentPeriod === 'yearly' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+                >
+                  Yearly
+                </button>
               </div>
-            </DialogContent>
-          </Dialog>
+            )}
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="secondary" size="sm">
+                  <PencilSimple size={16} />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Set Budget</DialogTitle>
+                  <DialogDescription>Define your maintenance budget</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="budget-amount">Budget Amount (€)</Label>
+                    <Input
+                      id="budget-amount"
+                      type="number"
+                      step="10"
+                      min="0"
+                      value={amount}
+                      onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="budget-period">Period</Label>
+                    <Select value={period} onValueChange={(value) => setPeriod(value as 'monthly' | 'yearly')}>
+                      <SelectTrigger id="budget-period">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="yearly">Yearly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={handleSave} className="w-full">
+                    Save Budget
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
         <CardDescription>
-          {budget ? `${period === 'yearly' ? 'Annual' : 'Monthly'} maintenance budget` : 'No budget set'}
+          {budget ? `${currentPeriod === 'yearly' ? 'Annual' : 'Monthly'} maintenance budget` : 'No budget set'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -103,9 +132,11 @@ export const BudgetOverview = ({ budget, actualSpending, onUpdateBudget }: Budge
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Spent</span>
-                <span className="font-medium">{formatCurrency(actualSpending)}</span>
+                <span className="font-medium">{formatCurrency(spending)}</span>
               </div>
-              <Progress value={percentage} className="h-3" />
+              <div className={getProgressColor()}>
+                <Progress value={percentage} className="h-3" />
+              </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Budget</span>
                 <span className="font-medium">{formatCurrency(budgetAmount)}</span>
