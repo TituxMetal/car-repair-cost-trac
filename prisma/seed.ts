@@ -1,7 +1,15 @@
 import { PrismaClient } from '../generated/prisma'
 import { PrismaLibSql } from '@prisma/adapter-libsql'
 
-const adapter = new PrismaLibSql({ url: 'file:prisma/dev.db' })
+// Load .env file for DATABASE_URL
+try {
+  process.loadEnvFile('.env')
+} catch {
+  // .env is optional
+}
+
+const databaseUrl = process.env.DATABASE_URL || 'file:./dev.db'
+const adapter = new PrismaLibSql({ url: databaseUrl })
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
