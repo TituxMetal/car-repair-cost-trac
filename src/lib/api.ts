@@ -1,4 +1,4 @@
-import { Vehicle, MaintenanceEvent, Expense, Budget } from './types'
+import { Vehicle, MaintenanceEvent, Expense, Budget, RecurringReminder } from './types'
 
 // API base URL - always use relative path since we serve fullstack from one origin
 // This works for:
@@ -135,14 +135,19 @@ export const expensesApi = {
   
   getById: (id: string) => fetchApi<Expense>(`/expenses/${id}`),
   
-  getStats: (vehicleId: string) =>
-    fetchApi<{
+  getStats: (vehicleId: string, params?: { period?: string; startDate?: string }) => {
+    const query = new URLSearchParams()
+    if (params?.period) query.set('period', params.period)
+    if (params?.startDate) query.set('startDate', params.startDate)
+    const qs = query.toString()
+    return fetchApi<{
       totalSpending: number
       partsCost: number
       laborCost: number
       otherCost: number
       count: number
-    }>(`/expenses/stats/${vehicleId}`),
+    }>(`/expenses/stats/${vehicleId}${qs ? `?${qs}` : ''}`)
+  },
   
   create: (expense: Omit<Expense, 'id'>) =>
     fetchApi<Expense>('/expenses', {
@@ -165,7 +170,7 @@ export const expensesApi = {
 // Budgets API
 export const budgetsApi = {
   getByVehicle: (vehicleId: string) =>
-    fetchApi<Budget>(`/budgets/${vehicleId}`).catch(() => null),
+    fetchApi<Budget & { currentSpending: number }>(`/budgets/${vehicleId}`).catch(() => null),
   
   createOrUpdate: (budget: Omit<Budget, 'id'>) =>
     fetchApi<Budget>('/budgets', {
@@ -183,4 +188,42 @@ export const budgetsApi = {
     fetchApi<{ success: boolean }>(`/budgets/${id}`, {
       method: 'DELETE',
     }),
+}
+
+// Reminders API
+export const remindersApi = {
+  getAll: (vehicleId?: string) =>
+    fetchApi<RecurringReminder[]>(vehicleId ? `/reminders?vehicleId=${vehicleId}` : '/reminders'),
+
+  getById: (id: string) => fetchApi<RecurringReminder>(`/reminders/${id}`),
+
+  create: (reminder: Omit<RecurringReminder, 'id' | 'createdAt' | 'updatedAt'>) =>
+    fetchApi<RecurringReminder>('/reminders', {
+      method: 'POST',
+      body: JSON.stringify(reminder),
+    }),
+
+  update: (id: string, reminder: Partial<RecurringReminder>) =>
+    fetchApi<RecurringReminder>(`/reminders/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(reminder),
+    }),
+
+  toggleActive: (id: string) =>
+    fetchApi<RecurringReminder>(`/reminders/${id}/toggle`, { method: 'PATCH' }),
+
+  markComplete: (id: string, data: { lastCompletedDate: string; lastCompletedMileage?: number }) =>
+    fetchApi<RecurringReminder>(`/reminders/${id}/complete`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  delete: (id: string) =>
+    fetchApi<{ success: boolean }>(`/reminders/${id}`, { method: 'DELETE' }),
+
+  generateEvents: (vehicleId: string) =>
+    fetchApi<{ created: number; events: MaintenanceEvent[] }>(
+      `/reminders/${vehicleId}/generate-events`,
+      { method: 'POST' }
+    ),
 }
