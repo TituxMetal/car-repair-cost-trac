@@ -44,7 +44,7 @@ export const VehicleForm = ({ vehicle, onSave, onCancel, isSubmitting }: Vehicle
       setTimeout(() => setShake(false), 400)
       return
     }
-    if (vehicle && formData.currentOdometer < minOdometer) {
+    if (formData.currentOdometer < minOdometer) {
       setShake(true)
       setOdometerError(true)
       setTimeout(() => setShake(false), 400)

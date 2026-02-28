@@ -15,6 +15,45 @@ interface VehicleProfileProps {
 export const VehicleProfile = ({ vehicle, onEdit }: VehicleProfileProps) => {
   const [detailsOpen, setDetailsOpen] = useState(false)
 
+  const formatPurchaseDate = (dateStr: string) => {
+    const [year, month, day] = dateStr.split('-')
+    return new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString()
+  }
+
+  const detailsGrid = (
+    <div className="grid grid-cols-2 gap-4">
+      {vehicle.fuelType && (
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">Fuel Type</p>
+          <p className="font-medium capitalize">{vehicle.fuelType}</p>
+        </div>
+      )}
+
+      {vehicle.engineType && (
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">Engine</p>
+          <p className="font-medium">{vehicle.engineType}</p>
+        </div>
+      )}
+
+      {vehicle.vin && (
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">VIN</p>
+          <p className="font-medium text-xs">{vehicle.vin}</p>
+        </div>
+      )}
+
+      {vehicle.purchaseDate && (
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">Purchased</p>
+          <p className="font-medium">
+            {formatPurchaseDate(vehicle.purchaseDate)}
+          </p>
+        </div>
+      )}
+    </div>
+  )
+
   return (
     <Card>
       <CardHeader>
@@ -23,7 +62,7 @@ export const VehicleProfile = ({ vehicle, onEdit }: VehicleProfileProps) => {
             <Car className="text-accent" size={24} />
             <CardTitle>Vehicle Profile</CardTitle>
           </div>
-          <Button variant="secondary" size="sm" onClick={onEdit} className="h-11 w-11 min-h-11 transition-all duration-150">
+          <Button variant="secondary" size="sm" onClick={onEdit} className="h-11 w-11 min-h-11 transition-all duration-150" aria-label="Edit vehicle" title="Edit vehicle">
             <PencilSimple size={16} />
           </Button>
         </div>
@@ -53,70 +92,12 @@ export const VehicleProfile = ({ vehicle, onEdit }: VehicleProfileProps) => {
               {detailsOpen ? <CaretUp size={14} /> : <CaretDown size={14} />}
             </Button>
           </CollapsibleTrigger>
-          <CollapsibleContent className="md:hidden">
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              {vehicle.fuelType && (
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Fuel Type</p>
-                  <p className="font-medium capitalize">{vehicle.fuelType}</p>
-                </div>
-              )}
-
-              {vehicle.engineType && (
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Engine</p>
-                  <p className="font-medium">{vehicle.engineType}</p>
-                </div>
-              )}
-
-              {vehicle.vin && (
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">VIN</p>
-                  <p className="font-medium text-xs">{vehicle.vin}</p>
-                </div>
-              )}
-
-              {vehicle.purchaseDate && (
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Purchased</p>
-                  <p className="font-medium">
-                    {new Date(vehicle.purchaseDate).toLocaleDateString()}
-                  </p>
-                </div>
-              )}
-            </div>
+          <CollapsibleContent className="md:hidden pt-2">
+            {detailsGrid}
           </CollapsibleContent>
 
-          <div className="hidden md:grid grid-cols-2 gap-4">
-            {vehicle.fuelType && (
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Fuel Type</p>
-                <p className="font-medium capitalize">{vehicle.fuelType}</p>
-              </div>
-            )}
-
-            {vehicle.engineType && (
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Engine</p>
-                <p className="font-medium">{vehicle.engineType}</p>
-              </div>
-            )}
-
-            {vehicle.vin && (
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">VIN</p>
-                <p className="font-medium text-xs">{vehicle.vin}</p>
-              </div>
-            )}
-
-            {vehicle.purchaseDate && (
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Purchased</p>
-                <p className="font-medium">
-                  {new Date(vehicle.purchaseDate).toLocaleDateString()}
-                </p>
-              </div>
-            )}
+          <div className="hidden md:block">
+            {detailsGrid}
           </div>
         </Collapsible>
       </CardContent>
