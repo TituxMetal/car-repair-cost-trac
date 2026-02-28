@@ -97,12 +97,17 @@ remindersRouter.patch(
       return c.json({ error: 'Reminder not found' }, 404)
     }
 
+    const updateData: { lastCompletedDate: string, lastCompletedMileage?: number | null } = {
+      lastCompletedDate: lastCompletedDate ?? new Date().toISOString().split('T')[0],
+    }
+
+    if (lastCompletedMileage !== undefined) {
+      updateData.lastCompletedMileage = lastCompletedMileage
+    }
+
     const reminder = await prisma.recurringReminder.update({
       where: { id },
-      data: {
-        lastCompletedDate: lastCompletedDate ?? new Date().toISOString().split('T')[0],
-        lastCompletedMileage: lastCompletedMileage ?? undefined,
-      },
+      data: updateData,
     })
 
     return c.json(reminder)
@@ -136,78 +141,80 @@ remindersRouter.post('/:vehicleId/generate-events', async (c) => {
   })
 
   type CreatedEvent = Awaited<ReturnType<typeof prisma.maintenanceEvent.create>>
-  const createdEvents: CreatedEvent[] = []
 
-  const existingOpenEvents = await prisma.maintenanceEvent.findMany({
-    where: {
-      vehicleId,
-      status: { not: 'completed' },
-    },
-    select: { category: true },
+  const createdEvents = await prisma.$transaction(async (tx) => {
+    const events: CreatedEvent[] = []
+
+    for (const reminder of activeReminders) {
+      const existingOpenEvent = await tx.maintenanceEvent.findFirst({
+        where: {
+          vehicleId,
+          category: reminder.category,
+          status: { not: 'completed' },
+        },
+      })
+
+      if (existingOpenEvent) {
+        continue
+      }
+
+      // Calculate next due date/mileage
+      let scheduledDate: string | null = null
+      let scheduledMileage: number | null = null
+
+      const today = new Date()
+
+      if (reminder.recurrenceType === 'time' || reminder.recurrenceType === 'both') {
+        if (reminder.timeInterval && reminder.timeUnit) {
+          let base = today
+          if (reminder.lastCompletedDate) {
+            const parsed = new Date(reminder.lastCompletedDate)
+            if (!isNaN(parsed.getTime())) {
+              base = parsed
+            }
+          }
+          const next = new Date(base)
+
+          if (reminder.timeUnit === 'days') {
+            next.setDate(next.getDate() + reminder.timeInterval)
+          } else if (reminder.timeUnit === 'weeks') {
+            next.setDate(next.getDate() + reminder.timeInterval * 7)
+          } else if (reminder.timeUnit === 'months') {
+            next.setMonth(next.getMonth() + reminder.timeInterval)
+          } else if (reminder.timeUnit === 'years') {
+            next.setFullYear(next.getFullYear() + reminder.timeInterval)
+          }
+
+          scheduledDate = next.toISOString().split('T')[0]
+        }
+      }
+
+      if (reminder.recurrenceType === 'mileage' || reminder.recurrenceType === 'both') {
+        if (reminder.mileageInterval) {
+          const baseMileage = reminder.lastCompletedMileage ?? vehicle.currentOdometer
+          scheduledMileage = baseMileage + reminder.mileageInterval
+        }
+      }
+
+      const event = await tx.maintenanceEvent.create({
+        data: {
+          vehicleId,
+          category: reminder.category,
+          type: 'service',
+          title: reminder.title,
+          description: reminder.description ?? null,
+          scheduledDate,
+          scheduledMileage,
+          status: 'scheduled',
+        },
+      })
+
+      events.push(event)
+    }
+
+    return events
   })
 
-  const categoriesWithOpenEvents = new Set(
-    existingOpenEvents.map((event) => event.category),
-  )
-
-  for (const reminder of activeReminders) {
-    if (categoriesWithOpenEvents.has(reminder.category)) {
-      continue
-    }
-
-    // Calculate next due date/mileage
-    let scheduledDate: string | null = null
-    let scheduledMileage: number | null = null
-
-    const today = new Date()
-
-    if (reminder.recurrenceType === 'time' || reminder.recurrenceType === 'both') {
-      if (reminder.timeInterval && reminder.timeUnit) {
-        let base = today
-        if (reminder.lastCompletedDate) {
-          const parsed = new Date(reminder.lastCompletedDate)
-          if (!isNaN(parsed.getTime())) {
-            base = parsed
-          }
-        }
-        const next = new Date(base)
-
-        if (reminder.timeUnit === 'days') {
-          next.setDate(next.getDate() + reminder.timeInterval)
-        } else if (reminder.timeUnit === 'weeks') {
-          next.setDate(next.getDate() + reminder.timeInterval * 7)
-        } else if (reminder.timeUnit === 'months') {
-          next.setMonth(next.getMonth() + reminder.timeInterval)
-        } else if (reminder.timeUnit === 'years') {
-          next.setFullYear(next.getFullYear() + reminder.timeInterval)
-        }
-
-        scheduledDate = next.toISOString().split('T')[0]
-      }
-    }
-
-    if (reminder.recurrenceType === 'mileage' || reminder.recurrenceType === 'both') {
-      if (reminder.mileageInterval) {
-        const baseMileage = reminder.lastCompletedMileage ?? vehicle.currentOdometer
-        scheduledMileage = baseMileage + reminder.mileageInterval
-      }
-    }
-
-    const event = await prisma.maintenanceEvent.create({
-      data: {
-        vehicleId,
-        category: reminder.category,
-        type: 'service',
-        title: reminder.title,
-        description: reminder.description ?? null,
-        scheduledDate,
-        scheduledMileage,
-        status: 'scheduled',
-      },
-    })
-
-    createdEvents.push(event)
-  }
-
-  return c.json({ created: createdEvents.length, events: createdEvents }, 201)
+  const status = createdEvents.length > 0 ? 201 : 200
+  return c.json({ created: createdEvents.length, events: createdEvents }, status)
 })
