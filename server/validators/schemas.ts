@@ -116,3 +116,39 @@ export const budgetUpdateSchema = budgetCreateSchema.partial().omit({ vehicleId:
 
 export type BudgetCreate = z.infer<typeof budgetCreateSchema>
 export type BudgetUpdate = z.infer<typeof budgetUpdateSchema>
+
+// Recurring Reminder schemas
+const reminderBaseSchema = z.object({
+  vehicleId: z.string().min(1, 'Vehicle ID is required'),
+  category: maintenanceCategorySchema,
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().optional(),
+  recurrenceType: z.enum(['time', 'mileage', 'both']),
+  mileageInterval: z.number().int().min(1).optional().nullable(),
+  timeInterval: z.number().int().min(1).optional().nullable(),
+  timeUnit: z.enum(['days', 'weeks', 'months', 'years']).optional().nullable(),
+  lastCompletedDate: z.string().optional().nullable(),
+  lastCompletedMileage: z.number().int().min(0).optional().nullable(),
+  isActive: z.boolean().default(true),
+})
+
+export const reminderCreateSchema = reminderBaseSchema.superRefine((data, ctx) => {
+  if (data.recurrenceType === 'time' || data.recurrenceType === 'both') {
+    if (!data.timeInterval) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'timeInterval is required for time-based recurrence', path: ['timeInterval'] })
+    }
+    if (!data.timeUnit) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'timeUnit is required for time-based recurrence', path: ['timeUnit'] })
+    }
+  }
+  if (data.recurrenceType === 'mileage' || data.recurrenceType === 'both') {
+    if (!data.mileageInterval) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'mileageInterval is required for mileage-based recurrence', path: ['mileageInterval'] })
+    }
+  }
+})
+
+export const reminderUpdateSchema = reminderBaseSchema.omit({ vehicleId: true }).partial()
+
+export type ReminderCreate = z.infer<typeof reminderCreateSchema>
+export type ReminderUpdate = z.infer<typeof reminderUpdateSchema>

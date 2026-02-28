@@ -27,6 +27,7 @@ model Vehicle {
   maintenanceEvents MaintenanceEvent[]
   expenses          Expense[]
   budget            Budget?
+  reminders         RecurringReminder[]
 }
 
 model MaintenanceEvent {
@@ -84,6 +85,25 @@ model Budget {
   startDate String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+}
+
+model RecurringReminder {
+  id                   String   @id @default(cuid())
+  vehicleId            String
+  category             String
+  title                String
+  description          String?
+  recurrenceType       String   // 'time', 'mileage', 'both'
+  mileageInterval      Int?     // e.g., 5000 (km)
+  timeInterval         Int?     // e.g., 3
+  timeUnit             String?  // 'days', 'weeks', 'months', 'years'
+  lastCompletedDate    String?
+  lastCompletedMileage Int?
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
 }
