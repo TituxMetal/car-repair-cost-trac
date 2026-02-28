@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { maintenanceApi } from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle } from '@phosphor-icons/react'
 
 interface ChecksHistoryProps {
   vehicleId: string
@@ -68,7 +68,7 @@ export function ChecksHistory({ vehicleId }: ChecksHistoryProps) {
       <Card className="border-2 rounded-md">
         <CardHeader className="py-3">
           <CardTitle className="flex items-center gap-2 text-base">
-            <CheckCircle2 className="h-5 w-5" />
+            <CheckCircle className="h-5 w-5" />
             Last Checked
           </CardTitle>
         </CardHeader>
@@ -85,7 +85,7 @@ export function ChecksHistory({ vehicleId }: ChecksHistoryProps) {
     <Card className="border-2 rounded-md">
       <CardHeader className="py-3">
         <CardTitle className="flex items-center gap-2 text-base">
-          <CheckCircle2 className="h-5 w-5 text-green-500" />
+          <CheckCircle className="h-5 w-5 text-green-500" />
           Last Checked
         </CardTitle>
       </CardHeader>
