@@ -45,7 +45,14 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
     const parts = dateStr.split('-')
     if (parts.length !== 3) return dateStr
     const [year, month, day] = parts.map(Number)
-    return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+    if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+      return dateStr
+    }
+    const date = new Date(year, month - 1, day)
+    if (Number.isNaN(date.getTime())) {
+      return dateStr
+    }
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
