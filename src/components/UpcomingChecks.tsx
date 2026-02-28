@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { CheckCircle2, Clock, ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle, Clock, CaretDown, CaretUp } from '@phosphor-icons/react'
 import { formatDate } from '@/lib/helpers'
 import { toast } from 'sonner'
 import { useState } from 'react'
@@ -95,7 +95,7 @@ export function UpcomingChecks({ vehicleId }: UpcomingChecksProps) {
       <Card className="border-2 rounded-md bg-green-500/10 border-green-500/30">
         <CardHeader className="py-3">
           <CardTitle className="flex items-center gap-2 text-base">
-            <CheckCircle2 className="h-5 w-5 text-green-500" />
+            <CheckCircle className="h-5 w-5 text-green-500" />
             All Checks Complete for This Week!
           </CardTitle>
         </CardHeader>
@@ -116,7 +116,7 @@ export function UpcomingChecks({ vehicleId }: UpcomingChecksProps) {
                   {dueThisWeek.length} due
                 </Badge>
               </CardTitle>
-              {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              {isOpen ? <CaretUp className="h-4 w-4" /> : <CaretDown className="h-4 w-4" />}
             </div>
           </CardHeader>
         </CollapsibleTrigger>
@@ -145,9 +145,9 @@ export function UpcomingChecks({ vehicleId }: UpcomingChecksProps) {
                     variant="ghost"
                     onClick={() => handleComplete(event)}
                     disabled={completeMutation.isPending}
-                    className="h-7 px-2 flex-shrink-0"
+                    className="h-11 px-3 flex-shrink-0 transition-all duration-150"
                   >
-                    <CheckCircle2 className="h-4 w-4" />
+                    <CheckCircle className="h-4 w-4" />
                   </Button>
                 </div>
               ))}

@@ -144,6 +144,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-shake: shake-gentle 0.3s ease;
 
   /*
   ---break---

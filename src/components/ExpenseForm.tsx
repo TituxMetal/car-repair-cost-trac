@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Spinner } from '@phosphor-icons/react'
 
 interface ExpenseFormProps {
   eventId: string
@@ -12,9 +13,10 @@ interface ExpenseFormProps {
   expense?: Expense
   onSave: (expense: Expense) => void
   onCancel?: () => void
+  isSubmitting?: boolean
 }
 
-export const ExpenseForm = ({ eventId, vehicleId, expense, onSave, onCancel }: ExpenseFormProps) => {
+export const ExpenseForm = ({ eventId, vehicleId, expense, onSave, onCancel, isSubmitting }: ExpenseFormProps) => {
   const [formData, setFormData] = useState<Expense>(
     expense || {
       id: generateId(),
@@ -29,9 +31,15 @@ export const ExpenseForm = ({ eventId, vehicleId, expense, onSave, onCancel }: E
       totalCost: 0
     }
   )
+  const [shake, setShake] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!formData.date) {
+      setShake(true)
+      setTimeout(() => setShake(false), 400)
+      return
+    }
     const total = formData.partsCost + formData.laborCost + formData.otherCost
     onSave({ ...formData, totalCost: total })
   }
@@ -49,7 +57,7 @@ export const ExpenseForm = ({ eventId, vehicleId, expense, onSave, onCancel }: E
         <p className="text-sm text-muted-foreground mt-1">Track your maintenance costs</p>
       </div>
       <div className="p-6">
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className={`space-y-5 ${shake ? 'animate-shake' : ''}`}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="date">Date *</Label>
@@ -136,11 +144,18 @@ export const ExpenseForm = ({ eventId, vehicleId, expense, onSave, onCancel }: E
           </div>
           
           <div className="flex gap-3 pt-2 border-t border-border">
-            <Button type="submit" className="flex-1" size="lg">
-              {expense ? 'Update Expense' : 'Add Expense'}
+            <Button type="submit" className="flex-1 transition-all duration-150" size="lg" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Spinner className="animate-spin mr-2 h-4 w-4" />
+                  Saving...
+                </>
+              ) : (
+                expense ? 'Update Expense' : 'Add Expense'
+              )}
             </Button>
             {onCancel && (
-              <Button type="button" variant="secondary" onClick={onCancel} size="lg">
+              <Button type="button" variant="secondary" onClick={onCancel} size="lg" className="transition-all duration-150">
                 Cancel
               </Button>
             )}

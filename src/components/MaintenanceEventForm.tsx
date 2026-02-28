@@ -6,15 +6,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Spinner } from '@phosphor-icons/react'
 
 interface MaintenanceEventFormProps {
   vehicleId: string
   event?: MaintenanceEvent
   onSave: (event: MaintenanceEvent) => void
   onCancel?: () => void
+  isSubmitting?: boolean
 }
 
-export const MaintenanceEventForm = ({ vehicleId, event, onSave, onCancel }: MaintenanceEventFormProps) => {
+export const MaintenanceEventForm = ({ vehicleId, event, onSave, onCancel, isSubmitting }: MaintenanceEventFormProps) => {
   const [formData, setFormData] = useState<MaintenanceEvent>(
     event || {
       id: generateId(),
@@ -34,12 +36,16 @@ export const MaintenanceEventForm = ({ vehicleId, event, onSave, onCancel }: Mai
       createdAt: new Date().toISOString()
     }
   )
+  const [shake, setShake] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (formData.title && formData.category) {
-      onSave(formData)
+    if (!formData.title || !formData.category) {
+      setShake(true)
+      setTimeout(() => setShake(false), 400)
+      return
     }
+    onSave(formData)
   }
 
   const handleChange = (field: keyof MaintenanceEvent, value: string | number | undefined) => {
@@ -53,7 +59,7 @@ export const MaintenanceEventForm = ({ vehicleId, event, onSave, onCancel }: Mai
         <p className="text-sm text-muted-foreground mt-1">Plan your vehicle maintenance</p>
       </div>
       <div className="p-6">
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className={`space-y-5 ${shake ? 'animate-shake' : ''}`}>
           <div className="space-y-2">
             <Label htmlFor="title">Title *</Label>
             <Input
@@ -176,11 +182,18 @@ export const MaintenanceEventForm = ({ vehicleId, event, onSave, onCancel }: Mai
           </div>
           
           <div className="flex gap-3 pt-2 border-t border-border">
-            <Button type="submit" className="flex-1" size="lg">
-              {event ? 'Update Event' : 'Schedule Event'}
+            <Button type="submit" className="flex-1 transition-all duration-150" size="lg" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Spinner className="animate-spin mr-2 h-4 w-4" />
+                  Saving...
+                </>
+              ) : (
+                event ? 'Update Event' : 'Schedule Event'
+              )}
             </Button>
             {onCancel && (
-              <Button type="button" variant="secondary" onClick={onCancel} size="lg">
+              <Button type="button" variant="secondary" onClick={onCancel} size="lg" className="transition-all duration-150">
                 Cancel
               </Button>
             )}
