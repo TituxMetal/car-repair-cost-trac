@@ -3,16 +3,17 @@ import { formatDate, formatMileage, maintenanceCategoryLabels, isOverdue } from 
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Wrench, Calendar, Gauge, MapPin, Clock, Check, Warning, Plus } from '@phosphor-icons/react'
+import { Wrench, Calendar, Gauge, MapPin, Clock, Check, Warning, Plus, Trash } from '@phosphor-icons/react'
 
 interface MaintenanceTimelineProps {
   events: MaintenanceEvent[]
   onEventClick: (event: MaintenanceEvent) => void
   onAddExpense: (eventId: string) => void
   onMarkComplete: (eventId: string) => void
+  onDelete: (eventId: string) => void
 }
 
-export const MaintenanceTimeline = ({ events, onEventClick, onAddExpense, onMarkComplete }: MaintenanceTimelineProps) => {
+export const MaintenanceTimeline = ({ events, onEventClick, onAddExpense, onMarkComplete, onDelete }: MaintenanceTimelineProps) => {
   const upcomingEvents = events.filter(e => e.status === 'scheduled' && !isOverdue(e.scheduledDate, e.status))
   const overdueEvents = events.filter(e => isOverdue(e.scheduledDate, e.status))
   const completedEvents = events.filter(e => e.status === 'completed')
@@ -76,30 +77,45 @@ export const MaintenanceTimeline = ({ events, onEventClick, onAddExpense, onMark
               </div>
             </div>
             
-            {event.status !== 'completed' && (
-              <div className="flex flex-col gap-2">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onMarkComplete(event.id)
-                  }}
-                >
-                  <Check size={16} />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onAddExpense(event.id)
-                  }}
-                >
-                  <Plus size={16} />
-                </Button>
-              </div>
-            )}
+            <div className="flex flex-col gap-2">
+              {event.status !== 'completed' && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onMarkComplete(event.id)
+                    }}
+                  >
+                    <Check size={16} />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onAddExpense(event.id)
+                    }}
+                  >
+                    <Plus size={16} />
+                  </Button>
+                </>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (window.confirm('Are you sure you want to delete this maintenance event?')) {
+                    onDelete(event.id)
+                  }
+                }}
+              >
+                <Trash size={16} />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
