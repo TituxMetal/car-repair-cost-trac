@@ -212,7 +212,7 @@ export const remindersApi = {
   toggleActive: (id: string) =>
     fetchApi<RecurringReminder>(`/reminders/${id}/toggle`, { method: 'PATCH' }),
 
-  markComplete: (id: string, data: { lastCompletedDate: string; lastCompletedMileage?: number }) =>
+  markComplete: (id: string, data: { lastCompletedDate?: string; lastCompletedMileage?: number | null }) =>
     fetchApi<RecurringReminder>(`/reminders/${id}/complete`, {
       method: 'PATCH',
       body: JSON.stringify(data),

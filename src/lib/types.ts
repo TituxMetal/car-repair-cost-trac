@@ -95,25 +95,3 @@ export interface RecurringReminder {
   createdAt: string
   updatedAt?: string
 }
-
-export interface MaintenanceEvent {
-  id: string
-  vehicleId: string
-  category: MaintenanceCategory
-  type: MaintenanceType
-  title: string
-  description?: string
-  scheduledDate?: string
-  scheduledMileage?: number
-  completedDate?: string
-  completedMileage?: number
-  status: MaintenanceStatus
-  appointmentTime?: string
-  appointmentPlace?: string
-  appointmentReason?: string
-  isRecurring?: boolean
-  recurrenceType?: MaintenanceRecurrenceType
-  recurrenceValue?: number
-  parentEventId?: string
-  createdAt: string
-}

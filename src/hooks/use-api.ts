@@ -127,7 +127,13 @@ export function useExpenses(vehicleId?: string, eventId?: string) {
 
 export function useExpenseStats(vehicleId: string, params?: { period?: string; startDate?: string }) {
   return useQuery({
-    queryKey: ['expenses', 'stats', vehicleId, params],
+    queryKey: [
+      'expenses',
+      'stats',
+      vehicleId,
+      params?.period ?? null,
+      params?.startDate ?? null,
+    ],
     queryFn: () => expensesApi.getStats(vehicleId, params),
     enabled: !!vehicleId,
   })
@@ -193,6 +199,7 @@ export const useReminders = (vehicleId?: string) =>
   useQuery({
     queryKey: ['reminders', vehicleId],
     queryFn: () => remindersApi.getAll(vehicleId),
+    enabled: !!vehicleId,
   })
 
 export const useCreateReminder = () => {
