@@ -1,7 +1,7 @@
-import { existsSync, mkdirSync, writeFileSync, unlinkSync } from 'fs'
-import { join } from 'path'
-import { createHash } from 'crypto'
 import type { BunPlugin } from 'bun'
+import { createHash } from 'crypto'
+import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs'
+import { join } from 'path'
 
 const projectRoot = import.meta.dirname
 
@@ -20,11 +20,14 @@ const cssInputPath = join(projectRoot, 'src/main.css')
 const cssTempOutputPath = join(assetsPath, 'styles.css')
 
 try {
-  const proc = Bun.spawn(['npx', '@tailwindcss/cli', '-i', cssInputPath, '-o', cssTempOutputPath, '--minify'], {
-    cwd: projectRoot,
-    stdout: 'inherit',
-    stderr: 'inherit'
-  })
+  const proc = Bun.spawn(
+    ['bunx', '--bun', '@tailwindcss/cli', '-i', cssInputPath, '-o', cssTempOutputPath, '--minify'],
+    {
+      cwd: projectRoot,
+      stdout: 'inherit',
+      stderr: 'inherit'
+    }
+  )
   const exitCode = await proc.exited
   if (exitCode !== 0) {
     throw new Error(`Tailwind CLI exited with code ${exitCode}`)
