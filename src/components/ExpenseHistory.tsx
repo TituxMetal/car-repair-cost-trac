@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Expense, MaintenanceEvent } from '@/lib/types'
-import { formatCurrency, formatDate } from '@/lib/helpers'
+import { formatCurrency } from '@/lib/helpers'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
@@ -41,6 +41,17 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
 
   const hasActions = !!(onEdit || onDelete)
 
+  const formatDateLocal = (dateStr: string) => {
+    const parts = dateStr.split('-')
+    if (parts.length !== 3) return dateStr
+    const [year, month, day] = parts.map(Number)
+    return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
+
   const filteredExpenses = sortedExpenses.filter(expense => {
     const query = search.toLowerCase()
     if (query) {
@@ -48,7 +59,7 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
         getEventTitle(expense.eventId).toLowerCase().includes(query) ||
         (expense.garageName || '').toLowerCase().includes(query) ||
         (expense.description || '').toLowerCase().includes(query) ||
-        formatDate(expense.date).toLowerCase().includes(query)
+        formatDateLocal(expense.date).toLowerCase().includes(query)
       if (!matchesSearch) return false
     }
 
@@ -102,13 +113,18 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
             size="sm"
             onClick={() => setFiltersOpen(open => !open)}
             className="flex items-center gap-2"
+            aria-expanded={filtersOpen}
+            aria-controls="expense-filters"
           >
             <Funnel size={16} />
             Filters
           </Button>
 
           {filtersOpen && (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 p-3 rounded-md border border-border bg-muted/20">
+            <div
+              id="expense-filters"
+              className="grid grid-cols-2 gap-3 sm:grid-cols-4 p-3 rounded-md border border-border bg-muted/20"
+            >
               <div className="space-y-1">
                 <Label htmlFor="filter-date-from" className="text-xs text-muted-foreground">Date from</Label>
                 <Input id="filter-date-from" type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
@@ -183,7 +199,7 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
                 <TableBody>
                   {filteredExpenses.map(expense => (
                     <TableRow key={expense.id}>
-                      <TableCell>{formatDate(expense.date)}</TableCell>
+                      <TableCell>{formatDateLocal(expense.date)}</TableCell>
                       <TableCell className="font-medium">{getEventTitle(expense.eventId)}</TableCell>
                       <TableCell>{expense.garageName || '-'}</TableCell>
                       <TableCell className="text-right">{formatCurrency(expense.partsCost)}</TableCell>
@@ -229,7 +245,7 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="font-medium">{getEventTitle(expense.eventId)}</p>
-                        <p className="text-xs text-muted-foreground">{formatDate(expense.date)}</p>
+                        <p className="text-xs text-muted-foreground">{formatDateLocal(expense.date)}</p>
                       </div>
                       <div className="flex items-center gap-1">
                         <p className="text-lg font-semibold text-accent">{formatCurrency(expense.totalCost)}</p>
