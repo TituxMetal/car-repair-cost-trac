@@ -36,6 +36,9 @@ export const VehicleForm = ({ vehicle, onSave, onCancel, isSubmitting }: Vehicle
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSubmitting) {
+      return
+    }
     if (!formData.make || !formData.model || !formData.year) {
       setShake(true)
       setTimeout(() => setShake(false), 400)
@@ -63,7 +66,7 @@ export const VehicleForm = ({ vehicle, onSave, onCancel, isSubmitting }: Vehicle
         <p className="text-sm text-muted-foreground mt-1">Enter your vehicle details</p>
       </div>
       <div className="p-6">
-        <form onSubmit={handleSubmit} className={`space-y-5 ${shake ? 'animate-shake' : ''}`}>
+        <form noValidate onSubmit={handleSubmit} className={`space-y-5 ${shake ? 'animate-shake' : ''}`}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="make">Make *</Label>
@@ -106,7 +109,10 @@ export const VehicleForm = ({ vehicle, onSave, onCancel, isSubmitting }: Vehicle
                 id="currentOdometer"
                 type="number"
                 value={formData.currentOdometer}
-                onChange={(e) => handleChange('currentOdometer', parseInt(e.target.value))}
+                onChange={(e) => {
+                  const parsed = parseInt(e.target.value)
+                  handleChange('currentOdometer', Number.isFinite(parsed) ? parsed : 0)
+                }}
                 min={minOdometer}
                 required
                 className={odometerError ? 'border-red-500 focus-visible:ring-red-500' : ''}
@@ -179,7 +185,7 @@ export const VehicleForm = ({ vehicle, onSave, onCancel, isSubmitting }: Vehicle
           </div>
           
           <div className="flex gap-3 pt-2 border-t border-border">
-            <Button type="submit" className="flex-1 transition-all duration-150" size="lg" disabled={isSubmitting || odometerError}>
+            <Button type="submit" className="flex-1 h-11 transition-all duration-150" size="lg" disabled={isSubmitting || odometerError}>
               {isSubmitting ? (
                 <>
                   <Spinner className="animate-spin mr-2 h-4 w-4" />
@@ -190,7 +196,7 @@ export const VehicleForm = ({ vehicle, onSave, onCancel, isSubmitting }: Vehicle
               )}
             </Button>
             {onCancel && (
-              <Button type="button" variant="secondary" onClick={onCancel} size="lg" className="transition-all duration-150">
+              <Button type="button" variant="secondary" onClick={onCancel} size="lg" className="h-11 transition-all duration-150">
                 Cancel
               </Button>
             )}
