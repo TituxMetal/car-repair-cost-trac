@@ -7,7 +7,7 @@ import { reminderCreateSchema, reminderUpdateSchema } from '../validators/schema
 export const remindersRouter = new Hono()
 
 const completeSchema = z.object({
-  lastCompletedDate: z.string().optional(),
+  lastCompletedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format').optional(),
   lastCompletedMileage: z.number().int().min(0).optional().nullable(),
 })
 
@@ -138,17 +138,20 @@ remindersRouter.post('/:vehicleId/generate-events', async (c) => {
   type CreatedEvent = Awaited<ReturnType<typeof prisma.maintenanceEvent.create>>
   const createdEvents: CreatedEvent[] = []
 
-  for (const reminder of activeReminders) {
-    // Check if a non-completed event already exists for this category
-    const existing = await prisma.maintenanceEvent.findFirst({
-      where: {
-        vehicleId,
-        category: reminder.category,
-        status: { not: 'completed' },
-      },
-    })
+  const existingOpenEvents = await prisma.maintenanceEvent.findMany({
+    where: {
+      vehicleId,
+      status: { not: 'completed' },
+    },
+    select: { category: true },
+  })
 
-    if (existing) {
+  const categoriesWithOpenEvents = new Set(
+    existingOpenEvents.map((event) => event.category),
+  )
+
+  for (const reminder of activeReminders) {
+    if (categoriesWithOpenEvents.has(reminder.category)) {
       continue
     }
 
@@ -160,7 +163,13 @@ remindersRouter.post('/:vehicleId/generate-events', async (c) => {
 
     if (reminder.recurrenceType === 'time' || reminder.recurrenceType === 'both') {
       if (reminder.timeInterval && reminder.timeUnit) {
-        const base = reminder.lastCompletedDate ? new Date(reminder.lastCompletedDate) : today
+        let base = today
+        if (reminder.lastCompletedDate) {
+          const parsed = new Date(reminder.lastCompletedDate)
+          if (!isNaN(parsed.getTime())) {
+            base = parsed
+          }
+        }
         const next = new Date(base)
 
         if (reminder.timeUnit === 'days') {
