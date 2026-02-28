@@ -10,7 +10,7 @@ interface MaintenanceTimelineProps {
   onEventClick: (event: MaintenanceEvent) => void
   onAddExpense: (eventId: string) => void
   onMarkComplete: (eventId: string) => void
-  onDelete?: (eventId: string) => void
+  onDelete: (eventId: string) => void
 }
 
 export const MaintenanceTimeline = ({ events, onEventClick, onAddExpense, onMarkComplete, onDelete }: MaintenanceTimelineProps) => {
@@ -104,22 +104,20 @@ export const MaintenanceTimeline = ({ events, onEventClick, onAddExpense, onMark
                   </Button>
                 </>
               )}
-              {onDelete && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  aria-label="Delete event"
-                  className="border-destructive/50 text-destructive hover:bg-destructive/10"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    if (window.confirm('Are you sure you want to delete this maintenance event?')) {
-                      onDelete(event.id)
-                    }
-                  }}
-                >
-                  <Trash size={16} />
-                </Button>
-              )}
+              <Button
+                size="sm"
+                variant="outline"
+                aria-label="Delete event"
+                className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (window.confirm('Are you sure you want to delete this maintenance event?')) {
+                    onDelete(event.id)
+                  }
+                }}
+              >
+                <Trash size={16} />
+              </Button>
             </div>
           </div>
         </CardContent>
