@@ -17,12 +17,25 @@ budgetsRouter.get('/:vehicleId', async (c) => {
     return c.json({ error: 'Budget not found' }, 404)
   }
 
-  const start = new Date(budget.startDate)
-  const end = new Date(budget.startDate)
+  const match = budget.startDate.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!match) {
+    return c.json({ error: 'Invalid budget startDate in database' }, 500)
+  }
+
+  const year = parseInt(match[1], 10)
+  const month = parseInt(match[2], 10)
+  const day = match[3]
+  if (month < 1 || month > 12) {
+    return c.json({ error: 'Invalid month in budget startDate' }, 500)
+  }
+
+  let endDate: string
   if (budget.period === 'monthly') {
-    end.setMonth(end.getMonth() + 1)
+    const endYear = month === 12 ? year + 1 : year
+    const endMonth = month === 12 ? 1 : month + 1
+    endDate = `${endYear}-${String(endMonth).padStart(2, '0')}-${day}`
   } else if (budget.period === 'yearly') {
-    end.setFullYear(end.getFullYear() + 1)
+    endDate = `${year + 1}-${String(month).padStart(2, '0')}-${day}`
   } else {
     return c.json({ error: 'Invalid budget period' }, 500)
   }
@@ -31,8 +44,8 @@ budgetsRouter.get('/:vehicleId', async (c) => {
     where: {
       vehicleId,
       date: {
-        gte: start.toISOString().split('T')[0],
-        lt: end.toISOString().split('T')[0],
+        gte: budget.startDate,
+        lt: endDate,
       },
     },
     _sum: { totalCost: true },
