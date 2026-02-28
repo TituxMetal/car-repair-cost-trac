@@ -116,9 +116,9 @@ function App() {
 
   const handleSaveVehicle = async (vehicleData: Vehicle) => {
     try {
-      if (vehicle && dialogMode.type === 'vehicle' && dialogMode.vehicle) {
+      if (dialogMode.type === 'vehicle' && dialogMode.vehicle && dialogMode.vehicle.id) {
         // Update existing vehicle
-        await updateVehicle.mutateAsync({ id: vehicle.id, data: vehicleData })
+        await updateVehicle.mutateAsync({ id: dialogMode.vehicle.id, data: vehicleData })
         toast.success('Vehicle updated successfully')
       } else {
         // Create new vehicle
