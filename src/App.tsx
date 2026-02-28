@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Vehicle, MaintenanceEvent, Expense, Budget, MaintenanceType, MaintenanceStatus, MaintenanceRecurrenceType } from '@/lib/types'
+import { useState, useEffect } from 'react'
+import { Vehicle, MaintenanceEvent, Expense, Budget, MaintenanceType, MaintenanceStatus, MaintenanceRecurrenceType, RecurringReminder } from '@/lib/types'
 import { defaultWeeklyChecks } from '@/lib/helpers'
 import { ApiError } from '@/lib/api'
 import {
@@ -16,8 +16,14 @@ import {
   useExpenseStats,
   useCreateExpense,
   useUpdateExpense,
+  useDeleteExpense,
   useBudget,
   useCreateOrUpdateBudget,
+  useReminders,
+  useCreateReminder,
+  useUpdateReminder,
+  useToggleReminder,
+  useDeleteReminder,
 } from '@/hooks/use-api'
 import { Toaster, toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -27,11 +33,15 @@ import { VehicleForm } from '@/components/VehicleForm'
 import { VehicleProfile } from '@/components/VehicleProfile'
 import { MaintenanceEventForm } from '@/components/MaintenanceEventForm'
 import { MaintenanceTimeline } from '@/components/MaintenanceTimeline'
+import { MaintenanceCalendar } from '@/components/MaintenanceCalendar'
 import { ExpenseForm } from '@/components/ExpenseForm'
 import { ExpenseHistory } from '@/components/ExpenseHistory'
 import { BudgetOverview } from '@/components/BudgetOverview'
 import { UpcomingChecks } from '@/components/UpcomingChecks'
 import { ChecksHistory } from '@/components/ChecksHistory'
+import { RecurringReminderList } from '@/components/RecurringReminderList'
+import { RecurringReminderForm } from '@/components/RecurringReminderForm'
+import { VehicleSelector } from '@/components/VehicleSelector'
 import { Plus, Car, Spinner } from '@phosphor-icons/react'
 
 type DialogMode = 
@@ -39,13 +49,24 @@ type DialogMode =
   | { type: 'vehicle'; vehicle?: Vehicle }
   | { type: 'maintenance'; event?: MaintenanceEvent }
   | { type: 'expense'; eventId?: string; expense?: Expense }
+  | { type: 'reminder'; reminder?: RecurringReminder }
 
 function App() {
   const [dialogMode, setDialogMode] = useState<DialogMode>({ type: 'none' })
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null)
 
   // Fetch data from backend
   const { data: vehicles, isLoading: vehiclesLoading, error: vehiclesError } = useVehicles()
-  const vehicle = vehicles?.[0] || null // For now, use the first vehicle
+
+  // Default to first vehicle if no selection made
+  const vehicle = vehicles?.find(v => v.id === selectedVehicleId) || vehicles?.[0] || null
+
+  // Sync selectedVehicleId with first vehicle once loaded
+  useEffect(() => {
+    if (vehicles && vehicles.length > 0 && !selectedVehicleId) {
+      setSelectedVehicleId(vehicles[0].id)
+    }
+  }, [vehicles, selectedVehicleId])
   
   // Log error for debugging
   if (vehiclesError) {
@@ -56,6 +77,7 @@ function App() {
   const { data: expenses = [], isLoading: expensesLoading } = useExpenses(vehicle?.id)
   const { data: budget } = useBudget(vehicle?.id || '')
   const { data: expenseStats } = useExpenseStats(vehicle?.id || '')
+  const { data: reminders = [] } = useReminders(vehicle?.id)
 
   // Mutations
   const createVehicle = useCreateVehicle()
@@ -67,7 +89,12 @@ function App() {
   const deleteMaintenanceEvent = useDeleteMaintenanceEvent()
   const createExpense = useCreateExpense()
   const updateExpense = useUpdateExpense()
+  const deleteExpense = useDeleteExpense()
   const createOrUpdateBudget = useCreateOrUpdateBudget()
+  const createReminder = useCreateReminder()
+  const updateReminder = useUpdateReminder()
+  const toggleReminder = useToggleReminder()
+  const deleteReminder = useDeleteReminder()
 
   // Helper to show detailed error messages
   const showError = (error: unknown, fallbackMessage: string) => {
@@ -89,7 +116,7 @@ function App() {
 
   const handleSaveVehicle = async (vehicleData: Vehicle) => {
     try {
-      if (vehicle) {
+      if (vehicle && dialogMode.type === 'vehicle' && dialogMode.vehicle) {
         // Update existing vehicle
         await updateVehicle.mutateAsync({ id: vehicle.id, data: vehicleData })
         toast.success('Vehicle updated successfully')
@@ -117,6 +144,7 @@ function App() {
         }))
         
         await createMaintenanceEventsBulk.mutateAsync(weeklyChecks)
+        setSelectedVehicleId(newVehicle.id)
         toast.success('Vehicle saved with weekly maintenance checks')
       }
       setDialogMode({ type: 'none' })
@@ -178,6 +206,19 @@ function App() {
     }
   }
 
+  const handleDeleteExpense = async (expenseId: string) => {
+    try {
+      await deleteExpense.mutateAsync(expenseId)
+      toast.success('Expense deleted')
+    } catch (error) {
+      showError(error, 'Failed to delete expense')
+    }
+  }
+
+  const handleEditExpense = (expense: Expense) => {
+    setDialogMode({ type: 'expense', expense })
+  }
+
   const handleUpdateBudget = async (updatedBudget: Budget) => {
     try {
       await createOrUpdateBudget.mutateAsync({
@@ -187,6 +228,38 @@ function App() {
       toast.success('Budget updated')
     } catch (error) {
       showError(error, 'Failed to update budget')
+    }
+  }
+
+  const handleSaveReminder = async (reminder: RecurringReminder) => {
+    try {
+      const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...reminderData } = reminder
+      if (reminders.find(r => r.id === reminder.id)) {
+        await updateReminder.mutateAsync({ id: reminder.id, data: reminderData })
+      } else {
+        await createReminder.mutateAsync(reminderData)
+      }
+      setDialogMode({ type: 'none' })
+      toast.success('Reminder saved')
+    } catch (error) {
+      showError(error, 'Failed to save reminder')
+    }
+  }
+
+  const handleToggleReminder = async (reminderId: string) => {
+    try {
+      await toggleReminder.mutateAsync(reminderId)
+    } catch (error) {
+      showError(error, 'Failed to toggle reminder')
+    }
+  }
+
+  const handleDeleteReminder = async (reminderId: string) => {
+    try {
+      await deleteReminder.mutateAsync(reminderId)
+      toast.success('Reminder deleted')
+    } catch (error) {
+      showError(error, 'Failed to delete reminder')
     }
   }
 
@@ -260,11 +333,27 @@ function App() {
             <div className="flex items-center gap-2">
               <Car className="text-accent" size={32} />
               <div>
-                <h1 className="text-xl font-semibold">
-                  {vehicle.year} {vehicle.make} {vehicle.model}
-                </h1>
-                <p className="text-xs text-muted-foreground">Maintenance Tracker</p>
+                <h1 className="text-xl font-semibold">Car Maintenance Tracker</h1>
+                <p className="text-xs text-muted-foreground">Track maintenance and costs</p>
               </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {vehicles && vehicles.length > 0 && (
+                <VehicleSelector
+                  vehicles={vehicles}
+                  selectedId={vehicle.id}
+                  onSelect={setSelectedVehicleId}
+                  onAddNew={() => setDialogMode({ type: 'vehicle' })}
+                />
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDialogMode({ type: 'vehicle' })}
+              >
+                <Plus size={16} />
+                Add Vehicle
+              </Button>
             </div>
           </div>
         </div>
@@ -272,10 +361,11 @@ function App() {
 
       <main className="container mx-auto px-4 py-6">
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
+            <TabsTrigger value="reminders">Reminders</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
@@ -329,6 +419,10 @@ function App() {
                 Add Event
               </Button>
             </div>
+            <MaintenanceCalendar
+              events={maintenanceEvents}
+              onEventClick={(event) => setDialogMode({ type: 'maintenance', event })}
+            />
             {maintenanceLoading ? (
               <div className="text-center py-8">
                 <Spinner className="animate-spin mx-auto" size={32} />
@@ -357,8 +451,29 @@ function App() {
                 <Spinner className="animate-spin mx-auto" size={32} />
               </div>
             ) : (
-              <ExpenseHistory expenses={expenses} events={maintenanceEvents} />
+              <ExpenseHistory
+                expenses={expenses}
+                events={maintenanceEvents}
+                onEdit={handleEditExpense}
+                onDelete={handleDeleteExpense}
+              />
             )}
+          </TabsContent>
+
+          <TabsContent value="reminders" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Recurring Reminders</h2>
+              <Button onClick={() => setDialogMode({ type: 'reminder' })}>
+                <Plus size={18} />
+                Add Reminder
+              </Button>
+            </div>
+            <RecurringReminderList
+              reminders={reminders}
+              onEdit={(reminder) => setDialogMode({ type: 'reminder', reminder })}
+              onDelete={handleDeleteReminder}
+              onToggleActive={handleToggleReminder}
+            />
           </TabsContent>
         </Tabs>
       </main>
@@ -386,6 +501,14 @@ function App() {
               vehicleId={vehicle.id}
               expense={dialogMode.expense}
               onSave={handleSaveExpense}
+              onCancel={() => setDialogMode({ type: 'none' })}
+            />
+          )}
+          {dialogMode.type === 'reminder' && vehicle && (
+            <RecurringReminderForm
+              vehicleId={vehicle.id}
+              reminder={dialogMode.reminder}
+              onSave={handleSaveReminder}
               onCancel={() => setDialogMode({ type: 'none' })}
             />
           )}

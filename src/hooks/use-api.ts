@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { vehiclesApi, maintenanceApi, expensesApi, budgetsApi } from '@/lib/api'
-import { Vehicle, MaintenanceEvent, Expense, Budget } from '@/lib/types'
+import { vehiclesApi, maintenanceApi, expensesApi, budgetsApi, remindersApi } from '@/lib/api'
+import { Vehicle, MaintenanceEvent, Expense, Budget, RecurringReminder } from '@/lib/types'
 
 // Vehicle hooks
 export function useVehicles() {
@@ -125,10 +125,10 @@ export function useExpenses(vehicleId?: string, eventId?: string) {
   })
 }
 
-export function useExpenseStats(vehicleId: string) {
+export function useExpenseStats(vehicleId: string, params?: { period?: string; startDate?: string }) {
   return useQuery({
-    queryKey: ['expenses', 'stats', vehicleId],
-    queryFn: () => expensesApi.getStats(vehicleId),
+    queryKey: ['expenses', 'stats', vehicleId, params],
+    queryFn: () => expensesApi.getStats(vehicleId, params),
     enabled: !!vehicleId,
   })
 }
@@ -184,6 +184,64 @@ export function useCreateOrUpdateBudget() {
     mutationFn: (budget: Omit<Budget, 'id'>) => budgetsApi.createOrUpdate(budget),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['budget', variables.vehicleId] })
+    },
+  })
+}
+
+// Reminder hooks
+export const useReminders = (vehicleId?: string) =>
+  useQuery({
+    queryKey: ['reminders', vehicleId],
+    queryFn: () => remindersApi.getAll(vehicleId),
+  })
+
+export const useCreateReminder = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: remindersApi.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reminders'] })
+    },
+  })
+}
+
+export const useUpdateReminder = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<RecurringReminder> }) =>
+      remindersApi.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reminders'] })
+    },
+  })
+}
+
+export const useToggleReminder = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: remindersApi.toggleActive,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reminders'] })
+    },
+  })
+}
+
+export const useDeleteReminder = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: remindersApi.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reminders'] })
+    },
+  })
+}
+
+export const useGenerateReminderEvents = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: remindersApi.generateEvents,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['maintenance'] })
     },
   })
 }
