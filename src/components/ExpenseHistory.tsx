@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Expense, MaintenanceEvent } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/helpers'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { CurrencyDollar, MagnifyingGlass, PencilSimple, Trash, Funnel } from '@phosphor-icons/react'
 
 interface ExpenseHistoryProps {
@@ -26,12 +27,19 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   )
 
-  const getEventTitle = (eventId: string) => {
-    const event = events.find(e => e.id === eventId)
-    return event?.title || 'Unknown Event'
-  }
+  const eventTitleMap = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const event of events) {
+      map.set(event.id, event.title)
+    }
+    return map
+  }, [events])
+
+  const getEventTitle = (eventId: string) => eventTitleMap.get(eventId) || 'Unknown Event'
 
   const totalSpent = expenses.reduce((sum, exp) => sum + exp.totalCost, 0)
+
+  const hasActions = !!(onEdit || onDelete)
 
   const filteredExpenses = sortedExpenses.filter(expense => {
     const query = search.toLowerCase()
@@ -81,6 +89,7 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
           <Input
             className="pl-9"
             placeholder="Search by event, garage, description or date…"
+            aria-label="Search expenses"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -101,28 +110,32 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
           {filtersOpen && (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 p-3 rounded-md border border-border bg-muted/20">
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Date from</label>
-                <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+                <Label htmlFor="filter-date-from" className="text-xs text-muted-foreground">Date from</Label>
+                <Input id="filter-date-from" type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Date to</label>
-                <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+                <Label htmlFor="filter-date-to" className="text-xs text-muted-foreground">Date to</Label>
+                <Input id="filter-date-to" type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Min cost</label>
+                <Label htmlFor="filter-min-cost" className="text-xs text-muted-foreground">Min cost</Label>
                 <Input
+                  id="filter-min-cost"
                   type="number"
                   min={0}
+                  step={0.01}
                   placeholder="0"
                   value={minCost}
                   onChange={e => setMinCost(e.target.value)}
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Max cost</label>
+                <Label htmlFor="filter-max-cost" className="text-xs text-muted-foreground">Max cost</Label>
                 <Input
+                  id="filter-max-cost"
                   type="number"
                   min={0}
+                  step={0.01}
                   placeholder="∞"
                   value={maxCost}
                   onChange={e => setMaxCost(e.target.value)}
@@ -164,7 +177,7 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
                     <TableHead className="text-right">Parts</TableHead>
                     <TableHead className="text-right">Labor</TableHead>
                     <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    {hasActions && <TableHead className="text-right">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -176,30 +189,32 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
                       <TableCell className="text-right">{formatCurrency(expense.partsCost)}</TableCell>
                       <TableCell className="text-right">{formatCurrency(expense.laborCost)}</TableCell>
                       <TableCell className="text-right font-semibold">{formatCurrency(expense.totalCost)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          {onEdit && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => onEdit(expense)}
-                              aria-label="Edit expense"
-                            >
-                              <PencilSimple size={16} />
-                            </Button>
-                          )}
-                          {onDelete && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(expense)}
-                              aria-label="Delete expense"
-                            >
-                              <Trash size={16} className="text-destructive" />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
+                      {hasActions && (
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            {onEdit && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => onEdit(expense)}
+                                aria-label="Edit expense"
+                              >
+                                <PencilSimple size={16} />
+                              </Button>
+                            )}
+                            {onDelete && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(expense)}
+                                aria-label="Delete expense"
+                              >
+                                <Trash size={16} className="text-destructive" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
