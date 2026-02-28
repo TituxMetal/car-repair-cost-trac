@@ -146,6 +146,7 @@ export function UpcomingChecks({ vehicleId }: UpcomingChecksProps) {
                     onClick={() => handleComplete(event)}
                     disabled={completeMutation.isPending}
                     className="h-11 px-3 flex-shrink-0 transition-all duration-150"
+                    aria-label={`Mark ${event.title} complete`}
                   >
                     <CheckCircle className="h-4 w-4" />
                   </Button>
