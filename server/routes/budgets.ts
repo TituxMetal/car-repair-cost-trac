@@ -17,25 +17,36 @@ budgetsRouter.get('/:vehicleId', async (c) => {
     return c.json({ error: 'Budget not found' }, 404)
   }
 
-  const match = budget.startDate.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  const normalized = budget.startDate.slice(0, 10)
+  const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})$/)
   if (!match) {
     return c.json({ error: 'Invalid budget startDate in database' }, 500)
   }
 
   const year = parseInt(match[1], 10)
   const month = parseInt(match[2], 10)
-  const day = match[3]
+  const day = parseInt(match[3], 10)
   if (month < 1 || month > 12) {
     return c.json({ error: 'Invalid month in budget startDate' }, 500)
   }
+  if (day < 1 || day > 31) {
+    return c.json({ error: 'Invalid day in budget startDate' }, 500)
+  }
+  const maxDay = new Date(year, month, 0).getDate()
+  if (day > maxDay) {
+    return c.json({ error: 'Invalid day for given month in budget startDate' }, 500)
+  }
 
-  let endDate: string
+  let startGte: string
+  let endLt: string
   if (budget.period === 'monthly') {
+    startGte = `${year}-${String(month).padStart(2, '0')}-01`
     const endYear = month === 12 ? year + 1 : year
     const endMonth = month === 12 ? 1 : month + 1
-    endDate = `${endYear}-${String(endMonth).padStart(2, '0')}-${day}`
+    endLt = `${endYear}-${String(endMonth).padStart(2, '0')}-01`
   } else if (budget.period === 'yearly') {
-    endDate = `${year + 1}-${String(month).padStart(2, '0')}-${day}`
+    startGte = `${year}-01-01`
+    endLt = `${year + 1}-01-01`
   } else {
     return c.json({ error: 'Invalid budget period' }, 500)
   }
@@ -44,8 +55,8 @@ budgetsRouter.get('/:vehicleId', async (c) => {
     where: {
       vehicleId,
       date: {
-        gte: budget.startDate,
-        lt: endDate,
+        gte: startGte,
+        lt: endLt,
       },
     },
     _sum: { totalCost: true },
