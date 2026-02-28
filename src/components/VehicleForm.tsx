@@ -5,14 +5,16 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Spinner } from '@phosphor-icons/react'
 
 interface VehicleFormProps {
   vehicle?: Vehicle
   onSave: (vehicle: Vehicle) => void
   onCancel?: () => void
+  isSubmitting?: boolean
 }
 
-export const VehicleForm = ({ vehicle, onSave, onCancel }: VehicleFormProps) => {
+export const VehicleForm = ({ vehicle, onSave, onCancel, isSubmitting }: VehicleFormProps) => {
   const [formData, setFormData] = useState<Vehicle>(
     vehicle || {
       id: generateId(),
@@ -27,16 +29,31 @@ export const VehicleForm = ({ vehicle, onSave, onCancel }: VehicleFormProps) => 
       engineType: ''
     }
   )
+  const [shake, setShake] = useState(false)
+  const [odometerError, setOdometerError] = useState(false)
+
+  const minOdometer = vehicle ? vehicle.currentOdometer : 0
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (formData.make && formData.model && formData.year) {
-      onSave(formData)
+    if (!formData.make || !formData.model || !formData.year) {
+      setShake(true)
+      setTimeout(() => setShake(false), 400)
+      return
     }
+    if (vehicle && formData.currentOdometer < minOdometer) {
+      setShake(true)
+      setTimeout(() => setShake(false), 400)
+      return
+    }
+    onSave(formData)
   }
 
   const handleChange = (field: keyof Vehicle, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+    if (field === 'currentOdometer' && vehicle) {
+      setOdometerError((value as number) < minOdometer)
+    }
   }
 
   return (
@@ -46,7 +63,7 @@ export const VehicleForm = ({ vehicle, onSave, onCancel }: VehicleFormProps) => 
         <p className="text-sm text-muted-foreground mt-1">Enter your vehicle details</p>
       </div>
       <div className="p-6">
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className={`space-y-5 ${shake ? 'animate-shake' : ''}`}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="make">Make *</Label>
@@ -90,9 +107,15 @@ export const VehicleForm = ({ vehicle, onSave, onCancel }: VehicleFormProps) => 
                 type="number"
                 value={formData.currentOdometer}
                 onChange={(e) => handleChange('currentOdometer', parseInt(e.target.value))}
-                min="0"
+                min={minOdometer}
                 required
+                className={odometerError ? 'border-red-500 focus-visible:ring-red-500' : ''}
+                aria-invalid={odometerError}
+                aria-describedby={odometerError ? 'odometer-error' : undefined}
               />
+              {odometerError && (
+                <p id="odometer-error" className="text-xs text-red-500">Odometer cannot go backwards</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -156,11 +179,18 @@ export const VehicleForm = ({ vehicle, onSave, onCancel }: VehicleFormProps) => 
           </div>
           
           <div className="flex gap-3 pt-2 border-t border-border">
-            <Button type="submit" className="flex-1" size="lg">
-              {vehicle ? 'Update Vehicle' : 'Add Vehicle'}
+            <Button type="submit" className="flex-1 transition-all duration-150" size="lg" disabled={isSubmitting || odometerError}>
+              {isSubmitting ? (
+                <>
+                  <Spinner className="animate-spin mr-2 h-4 w-4" />
+                  Saving...
+                </>
+              ) : (
+                vehicle ? 'Update Vehicle' : 'Add Vehicle'
+              )}
             </Button>
             {onCancel && (
-              <Button type="button" variant="secondary" onClick={onCancel} size="lg">
+              <Button type="button" variant="secondary" onClick={onCancel} size="lg" className="transition-all duration-150">
                 Cancel
               </Button>
             )}
