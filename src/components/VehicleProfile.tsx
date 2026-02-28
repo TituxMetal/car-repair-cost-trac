@@ -23,7 +23,7 @@ export const VehicleProfile = ({ vehicle, onEdit }: VehicleProfileProps) => {
             <Car className="text-accent" size={24} />
             <CardTitle>Vehicle Profile</CardTitle>
           </div>
-          <Button variant="secondary" size="sm" onClick={onEdit} className="transition-all duration-150">
+          <Button variant="secondary" size="sm" onClick={onEdit} className="h-11 w-11 min-h-11 transition-all duration-150">
             <PencilSimple size={16} />
           </Button>
         </div>
@@ -48,7 +48,7 @@ export const VehicleProfile = ({ vehicle, onEdit }: VehicleProfileProps) => {
 
         <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" aria-label={detailsOpen ? 'Collapse vehicle details' : 'Expand vehicle details'} className="w-full flex items-center justify-between transition-all duration-150 md:hidden">
+            <Button variant="ghost" size="sm" aria-label={detailsOpen ? 'Collapse vehicle details' : 'Expand vehicle details'} className="w-full flex items-center justify-between h-11 min-h-11 transition-all duration-150 md:hidden">
               <span className="text-sm text-muted-foreground">Details</span>
               {detailsOpen ? <CaretUp size={14} /> : <CaretDown size={14} />}
             </Button>
