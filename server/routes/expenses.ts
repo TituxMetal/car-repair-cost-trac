@@ -118,27 +118,38 @@ expensesRouter.get('/stats/:vehicleId', async (c) => {
     if (period !== 'monthly' && period !== 'yearly') {
       return c.json({ error: 'Invalid period. Must be monthly or yearly' }, 400)
     }
-    const match = startDate.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    const normalized = startDate.slice(0, 10)
+    const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})$/)
     if (!match) {
       return c.json({ error: 'Invalid startDate. Must be YYYY-MM-DD' }, 400)
     }
     const year = parseInt(match[1], 10)
     const month = parseInt(match[2], 10)
-    const day = match[3]
+    const day = parseInt(match[3], 10)
     if (month < 1 || month > 12) {
       return c.json({ error: 'Invalid month in startDate' }, 400)
     }
-
-    let endDate: string
-    if (period === 'monthly') {
-      const endYear = month === 12 ? year + 1 : year
-      const endMonth = month === 12 ? 1 : month + 1
-      endDate = `${endYear}-${String(endMonth).padStart(2, '0')}-${day}`
-    } else {
-      endDate = `${year + 1}-${String(month).padStart(2, '0')}-${day}`
+    if (day < 1 || day > 31) {
+      return c.json({ error: 'Invalid day in startDate' }, 400)
+    }
+    const maxDay = new Date(year, month, 0).getDate()
+    if (day > maxDay) {
+      return c.json({ error: 'Invalid day for given month in startDate' }, 400)
     }
 
-    dateFilter = { gte: startDate, lt: endDate }
+    let startGte: string
+    let endLt: string
+    if (period === 'monthly') {
+      startGte = `${year}-${String(month).padStart(2, '0')}-01`
+      const endYear = month === 12 ? year + 1 : year
+      const endMonth = month === 12 ? 1 : month + 1
+      endLt = `${endYear}-${String(endMonth).padStart(2, '0')}-01`
+    } else {
+      startGte = `${year}-01-01`
+      endLt = `${year + 1}-01-01`
+    }
+
+    dateFilter = { gte: startGte, lt: endLt }
   }
 
   const stats = await prisma.expense.aggregate({
