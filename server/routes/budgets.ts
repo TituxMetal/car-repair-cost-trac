@@ -16,8 +16,32 @@ budgetsRouter.get('/:vehicleId', async (c) => {
   if (!budget) {
     return c.json({ error: 'Budget not found' }, 404)
   }
-  
-  return c.json(budget)
+
+  const start = new Date(budget.startDate)
+  const end = new Date(budget.startDate)
+  if (budget.period === 'monthly') {
+    end.setMonth(end.getMonth() + 1)
+  } else if (budget.period === 'yearly') {
+    end.setFullYear(end.getFullYear() + 1)
+  } else {
+    return c.json({ error: 'Invalid budget period' }, 500)
+  }
+
+  const stats = await prisma.expense.aggregate({
+    where: {
+      vehicleId,
+      date: {
+        gte: start.toISOString().split('T')[0],
+        lt: end.toISOString().split('T')[0],
+      },
+    },
+    _sum: { totalCost: true },
+  })
+
+  return c.json({
+    ...budget,
+    currentSpending: stats._sum.totalCost || 0,
+  })
 })
 
 // Create or update budget (upsert)
