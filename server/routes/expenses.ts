@@ -105,9 +105,36 @@ expensesRouter.delete('/:id', async (c) => {
 // Get total spending stats for a vehicle
 expensesRouter.get('/stats/:vehicleId', async (c) => {
   const vehicleId = c.req.param('vehicleId')
-  
+  const period = c.req.query('period')
+  const startDate = c.req.query('startDate')
+
+  let dateFilter: { gte?: string; lt?: string } | undefined
+
+  if (period && startDate) {
+    if (period !== 'monthly' && period !== 'yearly') {
+      return c.json({ error: 'Invalid period. Must be monthly or yearly' }, 400)
+    }
+    const start = new Date(startDate)
+    if (isNaN(start.getTime())) {
+      return c.json({ error: 'Invalid startDate' }, 400)
+    }
+    const end = new Date(startDate)
+    if (period === 'monthly') {
+      end.setMonth(end.getMonth() + 1)
+    } else {
+      end.setFullYear(end.getFullYear() + 1)
+    }
+    dateFilter = {
+      gte: start.toISOString().split('T')[0],
+      lt: end.toISOString().split('T')[0],
+    }
+  }
+
   const stats = await prisma.expense.aggregate({
-    where: { vehicleId },
+    where: {
+      vehicleId,
+      ...(dateFilter && { date: dateFilter }),
+    },
     _sum: {
       totalCost: true,
       partsCost: true,
