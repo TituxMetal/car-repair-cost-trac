@@ -108,26 +108,37 @@ expensesRouter.get('/stats/:vehicleId', async (c) => {
   const period = c.req.query('period')
   const startDate = c.req.query('startDate')
 
-  let dateFilter: { gte?: string; lt?: string } | undefined
+  let dateFilter: { gte: string; lt: string } | undefined
+
+  if ((period && !startDate) || (!period && startDate)) {
+    return c.json({ error: 'Both period and startDate are required together' }, 400)
+  }
 
   if (period && startDate) {
     if (period !== 'monthly' && period !== 'yearly') {
       return c.json({ error: 'Invalid period. Must be monthly or yearly' }, 400)
     }
-    const start = new Date(startDate)
-    if (isNaN(start.getTime())) {
-      return c.json({ error: 'Invalid startDate' }, 400)
+    const match = startDate.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (!match) {
+      return c.json({ error: 'Invalid startDate. Must be YYYY-MM-DD' }, 400)
     }
-    const end = new Date(startDate)
+    const year = parseInt(match[1], 10)
+    const month = parseInt(match[2], 10)
+    const day = match[3]
+    if (month < 1 || month > 12) {
+      return c.json({ error: 'Invalid month in startDate' }, 400)
+    }
+
+    let endDate: string
     if (period === 'monthly') {
-      end.setMonth(end.getMonth() + 1)
+      const endYear = month === 12 ? year + 1 : year
+      const endMonth = month === 12 ? 1 : month + 1
+      endDate = `${endYear}-${String(endMonth).padStart(2, '0')}-${day}`
     } else {
-      end.setFullYear(end.getFullYear() + 1)
+      endDate = `${year + 1}-${String(month).padStart(2, '0')}-${day}`
     }
-    dateFilter = {
-      gte: start.toISOString().split('T')[0],
-      lt: end.toISOString().split('T')[0],
-    }
+
+    dateFilter = { gte: startDate, lt: endDate }
   }
 
   const stats = await prisma.expense.aggregate({
