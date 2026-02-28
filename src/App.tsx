@@ -11,6 +11,7 @@ import {
   useCreateMaintenanceEventsBulk,
   useUpdateMaintenanceEvent,
   useMarkMaintenanceComplete,
+  useDeleteMaintenanceEvent,
   useExpenses,
   useExpenseStats,
   useCreateExpense,
@@ -63,6 +64,7 @@ function App() {
   const createMaintenanceEventsBulk = useCreateMaintenanceEventsBulk()
   const updateMaintenanceEvent = useUpdateMaintenanceEvent()
   const markComplete = useMarkMaintenanceComplete()
+  const deleteMaintenanceEvent = useDeleteMaintenanceEvent()
   const createExpense = useCreateExpense()
   const updateExpense = useUpdateExpense()
   const createOrUpdateBudget = useCreateOrUpdateBudget()
@@ -164,6 +166,15 @@ function App() {
       toast.success('Maintenance marked as complete')
     } catch (error) {
       showError(error, 'Failed to mark as complete')
+    }
+  }
+
+  const handleDeleteMaintenanceEvent = async (eventId: string) => {
+    try {
+      await deleteMaintenanceEvent.mutateAsync(eventId)
+      toast.success('Maintenance event deleted')
+    } catch (error) {
+      showError(error, 'Failed to delete maintenance event')
     }
   }
 
@@ -304,6 +315,7 @@ function App() {
                   onEventClick={(event) => setDialogMode({ type: 'maintenance', event })}
                   onAddExpense={(eventId) => setDialogMode({ type: 'expense', eventId })}
                   onMarkComplete={handleMarkComplete}
+                  onDelete={handleDeleteMaintenanceEvent}
                 />
               )}
             </div>
@@ -327,6 +339,7 @@ function App() {
                 onEventClick={(event) => setDialogMode({ type: 'maintenance', event })}
                 onAddExpense={(eventId) => setDialogMode({ type: 'expense', eventId })}
                 onMarkComplete={handleMarkComplete}
+                onDelete={handleDeleteMaintenanceEvent}
               />
             )}
           </TabsContent>
