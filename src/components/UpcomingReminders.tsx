@@ -55,12 +55,12 @@ export const UpcomingReminders = ({ reminders, vehicle, onAddReminder }: Upcomin
       }
 
       if (reminder.recurrenceType === 'mileage' || reminder.recurrenceType === 'both') {
-        if (!reminder.lastCompletedMileage) {
+        if (reminder.lastCompletedMileage == null) {
           isDueSoon = true
         }
 
         if (reminder.mileageInterval) {
-          const lastMileage = reminder.lastCompletedMileage || 0
+          const lastMileage = reminder.lastCompletedMileage ?? 0
           mileageSinceLast = vehicle.currentOdometer - lastMileage
 
           if (mileageSinceLast >= reminder.mileageInterval * 0.8) {
