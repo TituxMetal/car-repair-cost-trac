@@ -3,22 +3,20 @@ import { vehiclesApi, maintenanceApi, expensesApi, budgetsApi, remindersApi } fr
 import { Vehicle, MaintenanceEvent, Expense, Budget, RecurringReminder } from '@/lib/types'
 
 // Vehicle hooks
-export function useVehicles() {
-  return useQuery({
+export const useVehicles = () =>
+  useQuery({
     queryKey: ['vehicles'],
     queryFn: vehiclesApi.getAll,
   })
-}
 
-export function useVehicle(id: string) {
-  return useQuery({
+export const useVehicle = (id: string) =>
+  useQuery({
     queryKey: ['vehicles', id],
     queryFn: () => vehiclesApi.getById(id),
     enabled: !!id,
   })
-}
 
-export function useCreateVehicle() {
+export const useCreateVehicle = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
@@ -29,7 +27,7 @@ export function useCreateVehicle() {
   })
 }
 
-export function useUpdateVehicle() {
+export const useUpdateVehicle = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
@@ -41,7 +39,7 @@ export function useUpdateVehicle() {
   })
 }
 
-export function useDeleteVehicle() {
+export const useDeleteVehicle = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
@@ -53,14 +51,13 @@ export function useDeleteVehicle() {
 }
 
 // Maintenance hooks
-export function useMaintenanceEvents(vehicleId?: string) {
-  return useQuery({
+export const useMaintenanceEvents = (vehicleId?: string) =>
+  useQuery({
     queryKey: ['maintenance', vehicleId],
     queryFn: () => maintenanceApi.getAll(vehicleId),
   })
-}
 
-export function useCreateMaintenanceEvent() {
+export const useCreateMaintenanceEvent = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
@@ -71,7 +68,7 @@ export function useCreateMaintenanceEvent() {
   })
 }
 
-export function useCreateMaintenanceEventsBulk() {
+export const useCreateMaintenanceEventsBulk = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
@@ -82,7 +79,7 @@ export function useCreateMaintenanceEventsBulk() {
   })
 }
 
-export function useUpdateMaintenanceEvent() {
+export const useUpdateMaintenanceEvent = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
@@ -94,7 +91,7 @@ export function useUpdateMaintenanceEvent() {
   })
 }
 
-export function useMarkMaintenanceComplete() {
+export const useMarkMaintenanceComplete = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
@@ -106,7 +103,7 @@ export function useMarkMaintenanceComplete() {
   })
 }
 
-export function useDeleteMaintenanceEvent() {
+export const useDeleteMaintenanceEvent = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
@@ -118,15 +115,14 @@ export function useDeleteMaintenanceEvent() {
 }
 
 // Expense hooks
-export function useExpenses(vehicleId?: string, eventId?: string) {
-  return useQuery({
+export const useExpenses = (vehicleId?: string, eventId?: string) =>
+  useQuery({
     queryKey: ['expenses', vehicleId, eventId],
     queryFn: () => expensesApi.getAll(vehicleId, eventId),
   })
-}
 
-export function useExpenseStats(vehicleId: string, params?: { period?: string; startDate?: string }) {
-  return useQuery({
+export const useExpenseStats = (vehicleId: string, params?: { period?: string; startDate?: string }) =>
+  useQuery({
     queryKey: [
       'expenses',
       'stats',
@@ -137,9 +133,8 @@ export function useExpenseStats(vehicleId: string, params?: { period?: string; s
     queryFn: () => expensesApi.getStats(vehicleId, params),
     enabled: !!vehicleId,
   })
-}
 
-export function useCreateExpense() {
+export const useCreateExpense = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
@@ -150,7 +145,7 @@ export function useCreateExpense() {
   })
 }
 
-export function useUpdateExpense() {
+export const useUpdateExpense = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
@@ -162,7 +157,7 @@ export function useUpdateExpense() {
   })
 }
 
-export function useDeleteExpense() {
+export const useDeleteExpense = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
@@ -174,16 +169,15 @@ export function useDeleteExpense() {
 }
 
 // Budget hooks
-export function useBudget(vehicleId: string) {
-  return useQuery({
+export const useBudget = (vehicleId: string) =>
+  useQuery({
     queryKey: ['budget', vehicleId],
     queryFn: () => budgetsApi.getByVehicle(vehicleId),
     enabled: !!vehicleId,
     retry: false, // Don't retry on 404
   })
-}
 
-export function useCreateOrUpdateBudget() {
+export const useCreateOrUpdateBudget = () => {
   const queryClient = useQueryClient()
   
   return useMutation({

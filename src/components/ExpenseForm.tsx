@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Expense } from '@/lib/types'
-import { generateId } from '@/lib/helpers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,7 +18,7 @@ interface ExpenseFormProps {
 export const ExpenseForm = ({ eventId, vehicleId, expense, onSave, onCancel, isSubmitting }: ExpenseFormProps) => {
   const [formData, setFormData] = useState<Expense>(
     expense || {
-      id: generateId(),
+      id: '',
       eventId,
       vehicleId,
       date: new Date().toISOString().split('T')[0],

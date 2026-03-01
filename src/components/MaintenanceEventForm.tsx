@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { MaintenanceEvent, MaintenanceCategory, MaintenanceType } from '@/lib/types'
-import { generateId, maintenanceCategoryLabels } from '@/lib/helpers'
+import { maintenanceCategoryLabels } from '@/lib/helpers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,7 +19,7 @@ interface MaintenanceEventFormProps {
 export const MaintenanceEventForm = ({ vehicleId, event, onSave, onCancel, isSubmitting }: MaintenanceEventFormProps) => {
   const [formData, setFormData] = useState<MaintenanceEvent>(
     event || {
-      id: generateId(),
+      id: '',
       vehicleId,
       category: 'oil-change',
       type: 'service',
