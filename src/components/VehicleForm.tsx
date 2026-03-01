@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Vehicle } from '@/lib/types'
-import { generateId } from '@/lib/helpers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,7 +16,7 @@ interface VehicleFormProps {
 export const VehicleForm = ({ vehicle, onSave, onCancel, isSubmitting }: VehicleFormProps) => {
   const [formData, setFormData] = useState<Vehicle>(
     vehicle || {
-      id: generateId(),
+      id: '',
       make: '',
       model: '',
       year: new Date().getFullYear(),
