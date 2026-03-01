@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { vehiclesApi, maintenanceApi, expensesApi, budgetsApi, remindersApi } from '@/lib/api'
+import { vehiclesApi, maintenanceApi, expensesApi, budgetsApi, remindersApi, demoApi } from '@/lib/api'
 import { Vehicle, MaintenanceEvent, Expense, Budget, RecurringReminder } from '@/lib/types'
 
 // Vehicle hooks
@@ -243,6 +243,17 @@ export const useGenerateReminderEvents = () => {
     mutationFn: remindersApi.generateEvents,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['maintenance'] })
+    },
+  })
+}
+
+// Demo hooks
+export const useResetDemoData = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: demoApi.reset,
+    onSuccess: () => {
+      queryClient.invalidateQueries()
     },
   })
 }

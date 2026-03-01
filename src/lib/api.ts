@@ -19,10 +19,10 @@ export class ApiError extends Error {
   }
 }
 
-async function fetchApi<T>(
+const fetchApi = async <T>(
   endpoint: string,
   options?: RequestInit
-): Promise<T> {
+): Promise<T> => {
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers: {
@@ -225,5 +225,13 @@ export const remindersApi = {
     fetchApi<{ created: number; events: MaintenanceEvent[] }>(
       `/reminders/${vehicleId}/generate-events`,
       { method: 'POST' }
+    ),
+}
+
+// Demo API
+export const demoApi = {
+  reset: () =>
+    fetchApi<{ vehicle: Vehicle; counts: { events: number; expenses: number; reminders: number } }>(
+      '/demo/reset', { method: 'POST' }
     ),
 }
