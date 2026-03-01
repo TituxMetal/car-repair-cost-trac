@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Spinner } from '@phosphor-icons/react'
+import { SpinnerIcon } from '@phosphor-icons/react'
 
 interface ExpenseFormProps {
   eventId: string
@@ -154,7 +154,7 @@ export const ExpenseForm = ({ eventId, vehicleId, expense, onSave, onCancel, isS
             <Button type="submit" className="flex-1 h-11 transition-all duration-150" size="lg" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
-                  <Spinner className="animate-spin mr-2 h-4 w-4" />
+                  <SpinnerIcon className="animate-spin mr-2 h-4 w-4" />
                   Saving...
                 </>
               ) : (
