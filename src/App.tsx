@@ -13,7 +13,7 @@ import {
   useMarkMaintenanceComplete,
   useDeleteMaintenanceEvent,
   useExpenses,
-  useExpenseStats,
+
   useCreateExpense,
   useUpdateExpense,
   useDeleteExpense,
@@ -51,7 +51,7 @@ type DialogMode =
   | { type: 'expense'; eventId?: string; expense?: Expense }
   | { type: 'reminder'; reminder?: RecurringReminder }
 
-function App() {
+const App = () => {
   const [dialogMode, setDialogMode] = useState<DialogMode>({ type: 'none' })
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null)
 
@@ -76,7 +76,6 @@ function App() {
   const { data: maintenanceEvents = [], isLoading: maintenanceLoading } = useMaintenanceEvents(vehicle?.id)
   const { data: expenses = [], isLoading: expensesLoading } = useExpenses(vehicle?.id)
   const { data: budget } = useBudget(vehicle?.id || '')
-  const { data: expenseStats } = useExpenseStats(vehicle?.id || '')
   const { data: reminders = [] } = useReminders(vehicle?.id)
 
   // Mutations
@@ -98,56 +97,60 @@ function App() {
 
   // Helper to show detailed error messages
   const showError = (error: unknown, fallbackMessage: string) => {
-    if (error instanceof ApiError) {
-      if (error.details) {
-        const messages = Object.entries(error.details)
-          .map(([field, errors]) => `${field}: ${errors.join(', ')}`)
-          .join('\n')
-        toast.error(`Validation failed:\n${messages}`, { duration: 5000 })
-      } else {
-        toast.error(`${fallbackMessage}: ${error.message}`)
-      }
-    } else if (error instanceof Error) {
-      toast.error(`${fallbackMessage}: ${error.message}`)
-    } else {
-      toast.error(fallbackMessage)
+    if (error instanceof ApiError && error.details) {
+      const messages = Object.entries(error.details)
+        .map(([field, errors]) => `${field}: ${errors.join(', ')}`)
+        .join('\n')
+      toast.error(`Validation failed:\n${messages}`, { duration: 5000 })
+      return
     }
+
+    if (error instanceof ApiError) {
+      toast.error(`${fallbackMessage}: ${error.message}`)
+      return
+    }
+
+    if (error instanceof Error) {
+      toast.error(`${fallbackMessage}: ${error.message}`)
+      return
+    }
+
+    toast.error(fallbackMessage)
   }
 
   const handleSaveVehicle = async (vehicleData: Vehicle) => {
     try {
       if (dialogMode.type === 'vehicle' && dialogMode.vehicle && dialogMode.vehicle.id) {
-        // Update existing vehicle
         await updateVehicle.mutateAsync({ id: dialogMode.vehicle.id, data: vehicleData })
+        setDialogMode({ type: 'none' })
         toast.success('Vehicle updated successfully')
-      } else {
-        // Create new vehicle
-        const { id: _id, ...vehicleWithoutId } = vehicleData
-        const newVehicle = await createVehicle.mutateAsync(vehicleWithoutId)
-        
-        // Create default weekly checks
-        const nextWeek = new Date()
-        nextWeek.setDate(nextWeek.getDate() + 7)
-        const scheduledDate = nextWeek.toISOString().split('T')[0]
-        
-        const weeklyChecks: Omit<MaintenanceEvent, 'id' | 'createdAt'>[] = defaultWeeklyChecks.map(check => ({
-          vehicleId: newVehicle.id,
-          category: check.category,
-          type: 'weekly-check' as MaintenanceType,
-          title: check.title,
-          description: check.description,
-          scheduledDate,
-          status: 'scheduled' as MaintenanceStatus,
-          isRecurring: true,
-          recurrenceType: 'weekly' as MaintenanceRecurrenceType,
-          recurrenceValue: 1,
-        }))
-        
-        await createMaintenanceEventsBulk.mutateAsync(weeklyChecks)
-        setSelectedVehicleId(newVehicle.id)
-        toast.success('Vehicle saved with weekly maintenance checks')
+        return
       }
+      const { id: _id, ...vehicleWithoutId } = vehicleData
+      const newVehicle = await createVehicle.mutateAsync(vehicleWithoutId)
+      
+      // Create default weekly checks
+      const nextWeek = new Date()
+      nextWeek.setDate(nextWeek.getDate() + 7)
+      const scheduledDate = nextWeek.toISOString().split('T')[0]
+      
+      const weeklyChecks: Omit<MaintenanceEvent, 'id' | 'createdAt'>[] = defaultWeeklyChecks.map(check => ({
+        vehicleId: newVehicle.id,
+        category: check.category,
+        type: 'weekly-check' as MaintenanceType,
+        title: check.title,
+        description: check.description,
+        scheduledDate,
+        status: 'scheduled' as MaintenanceStatus,
+        isRecurring: true,
+        recurrenceType: 'weekly' as MaintenanceRecurrenceType,
+        recurrenceValue: 1,
+      }))
+      
+      await createMaintenanceEventsBulk.mutateAsync(weeklyChecks)
+      setSelectedVehicleId(newVehicle.id)
       setDialogMode({ type: 'none' })
+      toast.success('Vehicle saved with weekly maintenance checks')
     } catch (error) {
       showError(error, 'Failed to save vehicle')
     }
@@ -159,9 +162,11 @@ function App() {
       
       if (maintenanceEvents.find(e => e.id === event.id)) {
         await updateMaintenanceEvent.mutateAsync({ id: event.id, data: eventData })
-      } else {
-        await createMaintenanceEvent.mutateAsync(eventData)
+        setDialogMode({ type: 'none' })
+        toast.success('Maintenance event updated')
+        return
       }
+      await createMaintenanceEvent.mutateAsync(eventData)
       setDialogMode({ type: 'none' })
       toast.success('Maintenance event saved')
     } catch (error) {
@@ -175,9 +180,11 @@ function App() {
       
       if (expenses.find(e => e.id === expense.id)) {
         await updateExpense.mutateAsync({ id: expense.id, data: expenseData })
-      } else {
-        await createExpense.mutateAsync(expenseData)
+        setDialogMode({ type: 'none' })
+        toast.success('Expense updated')
+        return
       }
+      await createExpense.mutateAsync(expenseData)
       setDialogMode({ type: 'none' })
       toast.success('Expense recorded')
     } catch (error) {
@@ -236,9 +243,11 @@ function App() {
       const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...reminderData } = reminder
       if (reminders.find(r => r.id === reminder.id)) {
         await updateReminder.mutateAsync({ id: reminder.id, data: reminderData })
-      } else {
-        await createReminder.mutateAsync(reminderData)
+        setDialogMode({ type: 'none' })
+        toast.success('Reminder updated')
+        return
       }
+      await createReminder.mutateAsync(reminderData)
       setDialogMode({ type: 'none' })
       toast.success('Reminder saved')
     } catch (error) {
@@ -262,8 +271,6 @@ function App() {
       showError(error, 'Failed to delete reminder')
     }
   }
-
-  const totalSpending = expenseStats?.totalSpending || 0
 
   // Loading state
   if (vehiclesLoading) {
@@ -382,7 +389,6 @@ function App() {
               />
               <BudgetOverview
                 budget={budget || undefined}
-                actualSpending={totalSpending}
                 onUpdateBudget={handleUpdateBudget}
               />
             </div>
