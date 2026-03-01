@@ -36,11 +36,11 @@ export const UpcomingReminders = ({ reminders, vehicle, onAddReminder }: Upcomin
       let mileageSinceLast: number | undefined
       let isDueSoon = false
 
-      if (!reminder.lastCompletedDate) {
-        isDueSoon = true
-      }
-
       if (reminder.recurrenceType === 'time' || reminder.recurrenceType === 'both') {
+        if (!reminder.lastCompletedDate) {
+          isDueSoon = true
+        }
+
         if (reminder.lastCompletedDate && reminder.timeInterval && reminder.timeUnit) {
           const lastDate = new Date(reminder.lastCompletedDate)
           const diffTime = now.getTime() - lastDate.getTime()
@@ -55,6 +55,10 @@ export const UpcomingReminders = ({ reminders, vehicle, onAddReminder }: Upcomin
       }
 
       if (reminder.recurrenceType === 'mileage' || reminder.recurrenceType === 'both') {
+        if (!reminder.lastCompletedMileage) {
+          isDueSoon = true
+        }
+
         if (reminder.mileageInterval) {
           const lastMileage = reminder.lastCompletedMileage || 0
           mileageSinceLast = vehicle.currentOdometer - lastMileage
