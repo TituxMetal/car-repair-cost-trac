@@ -84,6 +84,7 @@ export const MaintenanceTimeline = ({ events, onEventClick, onAddExpense, onMark
                     size="sm"
                     variant="secondary"
                     aria-label="Mark complete"
+                    className="h-11 min-h-11"
                     onClick={(e) => {
                       e.stopPropagation()
                       onMarkComplete(event.id)
@@ -95,6 +96,7 @@ export const MaintenanceTimeline = ({ events, onEventClick, onAddExpense, onMark
                     size="sm"
                     variant="outline"
                     aria-label="Add expense"
+                    className="h-11 min-h-11"
                     onClick={(e) => {
                       e.stopPropagation()
                       onAddExpense(event.id)
@@ -108,7 +110,7 @@ export const MaintenanceTimeline = ({ events, onEventClick, onAddExpense, onMark
                 size="sm"
                 variant="outline"
                 aria-label="Delete event"
-                className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                className="h-11 min-h-11 border-destructive/50 text-destructive hover:bg-destructive/10"
                 onClick={(e) => {
                   e.stopPropagation()
                   if (window.confirm('Are you sure you want to delete this maintenance event?')) {
