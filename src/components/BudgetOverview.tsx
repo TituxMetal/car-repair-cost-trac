@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { CurrencyDollar, PencilSimple, Warning } from '@phosphor-icons/react'
+import { CurrencyDollarIcon, PencilSimpleIcon, WarningIcon } from '@phosphor-icons/react'
 
 const getStartDateForPeriod = (p: 'monthly' | 'yearly'): string => {
   const now = new Date()
@@ -49,8 +49,12 @@ export const BudgetOverview = ({ budget, onUpdateBudget }: BudgetOverviewProps) 
 
   const handlePeriodToggle = (newPeriod: 'monthly' | 'yearly') => {
     if (!budget || newPeriod === budget.period) return
+    const scaledAmount = newPeriod === 'yearly'
+      ? Math.round(budget.amount * 12 * 100) / 100
+      : Math.round((budget.amount / 12) * 100) / 100
     setPeriod(newPeriod)
-    onUpdateBudget({ ...budget, period: newPeriod, startDate: getStartDateForPeriod(newPeriod) })
+    setAmount(scaledAmount)
+    onUpdateBudget({ ...budget, amount: scaledAmount, period: newPeriod, startDate: getStartDateForPeriod(newPeriod) })
   }
 
   const currentPeriod = period
@@ -72,7 +76,7 @@ export const BudgetOverview = ({ budget, onUpdateBudget }: BudgetOverviewProps) 
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CurrencyDollar className="text-accent" size={24} />
+            <CurrencyDollarIcon className="text-accent" size={24} />
             <CardTitle>Budget Overview</CardTitle>
           </div>
           <div className="flex items-center gap-2">
@@ -82,7 +86,7 @@ export const BudgetOverview = ({ budget, onUpdateBudget }: BudgetOverviewProps) 
                   type="button"
                   aria-pressed={currentPeriod === 'monthly'}
                   onClick={() => handlePeriodToggle('monthly')}
-                  className={`px-3 py-2 min-h-11 transition-colors ${currentPeriod === 'monthly' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+                  className={`px-3 py-2 min-h-11 cursor-pointer transition-colors ${currentPeriod === 'monthly' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
                 >
                   Monthly
                 </button>
@@ -90,7 +94,7 @@ export const BudgetOverview = ({ budget, onUpdateBudget }: BudgetOverviewProps) 
                   type="button"
                   aria-pressed={currentPeriod === 'yearly'}
                   onClick={() => handlePeriodToggle('yearly')}
-                  className={`px-3 py-2 min-h-11 transition-colors ${currentPeriod === 'yearly' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+                  className={`px-3 py-2 min-h-11 cursor-pointer transition-colors ${currentPeriod === 'yearly' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
                 >
                   Yearly
                 </button>
@@ -99,15 +103,15 @@ export const BudgetOverview = ({ budget, onUpdateBudget }: BudgetOverviewProps) 
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="secondary" size="sm">
-                  <PencilSimple size={16} />
+                  <PencilSimpleIcon size={16} />
                 </Button>
               </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Set Budget</DialogTitle>
-                  <DialogDescription>Define your maintenance budget</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
+              <DialogContent className="sm:max-w-md">
+                <div className="border-b border-border px-6 py-5 bg-card">
+                  <h2 className="text-2xl font-semibold">Set Budget</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Define your maintenance budget</p>
+                </div>
+                <div className="p-6 space-y-5">
                   <div className="space-y-2">
                     <Label htmlFor="budget-amount">Budget Amount (€)</Label>
                     <Input
@@ -131,9 +135,11 @@ export const BudgetOverview = ({ budget, onUpdateBudget }: BudgetOverviewProps) 
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button onClick={handleSave} className="w-full">
-                    Save Budget
-                  </Button>
+                  <div className="pt-2 border-t border-border">
+                    <Button onClick={handleSave} className="w-full h-11" size="lg">
+                      Save Budget
+                    </Button>
+                  </div>
                 </div>
               </DialogContent>
             </Dialog>
@@ -163,7 +169,7 @@ export const BudgetOverview = ({ budget, onUpdateBudget }: BudgetOverviewProps) 
             <div className={`p-4 rounded-lg ${isOverBudget ? 'bg-destructive/10' : 'bg-primary/10'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {isOverBudget && <Warning className="text-destructive" size={20} />}
+                  {isOverBudget && <WarningIcon className="text-destructive" size={20} />}
                   <span className="text-sm font-medium">
                     {isOverBudget ? 'Over Budget' : 'Remaining'}
                   </span>
