@@ -39,16 +39,20 @@ budgetsRouter.get('/:vehicleId', async (c) => {
 
   let startGte: string
   let endLt: string
+  if (budget.period !== 'monthly' && budget.period !== 'yearly') {
+    return c.json({ error: 'Invalid budget period' }, 500)
+  }
+
   if (budget.period === 'monthly') {
     startGte = `${year}-${String(month).padStart(2, '0')}-01`
     const endYear = month === 12 ? year + 1 : year
     const endMonth = month === 12 ? 1 : month + 1
     endLt = `${endYear}-${String(endMonth).padStart(2, '0')}-01`
-  } else if (budget.period === 'yearly') {
+  }
+
+  if (budget.period === 'yearly') {
     startGte = `${year}-01-01`
     endLt = `${year + 1}-01-01`
-  } else {
-    return c.json({ error: 'Invalid budget period' }, 500)
   }
 
   const stats = await prisma.expense.aggregate({
@@ -97,15 +101,16 @@ budgetsRouter.put(
     const id = c.req.param('id')
     const data = c.req.valid('json')
     
-    try {
-      const budget = await prisma.budget.update({
-        where: { id },
-        data,
-      })
-      return c.json(budget)
-    } catch (_error) {
+    const existing = await prisma.budget.findUnique({ where: { id } })
+    if (!existing) {
       return c.json({ error: 'Budget not found' }, 404)
     }
+
+    const budget = await prisma.budget.update({
+      where: { id },
+      data,
+    })
+    return c.json(budget)
   }
 )
 
@@ -113,12 +118,13 @@ budgetsRouter.put(
 budgetsRouter.delete('/:id', async (c) => {
   const id = c.req.param('id')
   
-  try {
-    await prisma.budget.delete({
-      where: { id },
-    })
-    return c.json({ success: true })
-  } catch (_error) {
+  const existing = await prisma.budget.findUnique({ where: { id } })
+  if (!existing) {
     return c.json({ error: 'Budget not found' }, 404)
   }
+
+  await prisma.budget.delete({
+    where: { id },
+  })
+  return c.json({ success: true })
 })

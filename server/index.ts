@@ -48,6 +48,10 @@ app.route('/api', api)
 // Serve static files from the built frontend
 const distPath = join(process.cwd(), 'dist')
 
+if (!existsSync(distPath)) {
+  console.log('⚠️ No dist folder found, serving API only')
+}
+
 if (existsSync(distPath)) {
   console.log('📁 Serving frontend from:', distPath)
   
@@ -77,8 +81,6 @@ if (existsSync(distPath)) {
     }
     return c.json({ error: 'Frontend not found' }, 404)
   })
-} else {
-  console.log('⚠️ No dist folder found, serving API only')
 }
 
 const port = Number(process.env.PORT) || 3001
