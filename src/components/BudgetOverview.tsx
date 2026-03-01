@@ -18,11 +18,10 @@ const getStartDateForPeriod = (p: 'monthly' | 'yearly'): string => {
 
 interface BudgetOverviewProps {
   budget?: Budget & { currentSpending?: number }
-  actualSpending?: number
   onUpdateBudget: (budget: Budget) => void
 }
 
-export const BudgetOverview = ({ budget, actualSpending, onUpdateBudget }: BudgetOverviewProps) => {
+export const BudgetOverview = ({ budget, onUpdateBudget }: BudgetOverviewProps) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [amount, setAmount] = useState(budget?.amount || 1000)
   const [period, setPeriod] = useState<'monthly' | 'yearly'>(budget?.period || 'yearly')
@@ -55,7 +54,7 @@ export const BudgetOverview = ({ budget, actualSpending, onUpdateBudget }: Budge
   }
 
   const currentPeriod = period
-  const spending = budget?.currentSpending ?? actualSpending ?? 0
+  const spending = budget?.currentSpending ?? 0
   const budgetAmount = budget?.amount || 0
   const rawPercentage = budgetAmount > 0 ? (spending / budgetAmount) * 100 : 0
   const percentage = Math.min(rawPercentage, 100)
@@ -83,7 +82,7 @@ export const BudgetOverview = ({ budget, actualSpending, onUpdateBudget }: Budge
                   type="button"
                   aria-pressed={currentPeriod === 'monthly'}
                   onClick={() => handlePeriodToggle('monthly')}
-                  className={`px-2 py-1 transition-colors ${currentPeriod === 'monthly' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+                  className={`px-3 py-2 min-h-11 transition-colors ${currentPeriod === 'monthly' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
                 >
                   Monthly
                 </button>
@@ -91,7 +90,7 @@ export const BudgetOverview = ({ budget, actualSpending, onUpdateBudget }: Budge
                   type="button"
                   aria-pressed={currentPeriod === 'yearly'}
                   onClick={() => handlePeriodToggle('yearly')}
-                  className={`px-2 py-1 transition-colors ${currentPeriod === 'yearly' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+                  className={`px-3 py-2 min-h-11 transition-colors ${currentPeriod === 'yearly' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
                 >
                   Yearly
                 </button>

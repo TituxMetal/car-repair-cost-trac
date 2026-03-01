@@ -25,16 +25,8 @@ const categoryLabels: Record<string, string> = {
   'lights-check': 'Lights',
 }
 
-// Get week number from date
-function _getWeekNumber(dateStr: string): number {
-  const date = new Date(dateStr)
-  const startOfYear = new Date(date.getFullYear(), 0, 1)
-  const days = Math.floor((date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000))
-  return Math.ceil((days + startOfYear.getDay() + 1) / 7)
-}
-
 // Format relative time
-function formatRelative(dateStr: string): string {
+const formatRelative = (dateStr: string): string => {
   const date = new Date(dateStr)
   const now = new Date()
   const diffDays = Math.floor((now.getTime() - date.getTime()) / (24 * 60 * 60 * 1000))
@@ -47,7 +39,7 @@ function formatRelative(dateStr: string): string {
   return `${weeks}w ago`
 }
 
-export function ChecksHistory({ vehicleId }: ChecksHistoryProps) {
+export const ChecksHistory = ({ vehicleId }: ChecksHistoryProps) => {
   const { data: history = [], isLoading } = useQuery({
     queryKey: ['maintenance', 'history', vehicleId],
     queryFn: () => maintenanceApi.getHistory(vehicleId),

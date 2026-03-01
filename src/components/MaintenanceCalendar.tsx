@@ -29,9 +29,10 @@ export const MaintenanceCalendar = ({ events, onEventClick, onDateClick }: Maint
     if (month === 0) {
       setYear(y => y - 1)
       setMonth(11)
-    } else {
-      setMonth(m => m - 1)
+      setSelectedDate(null)
+      return
     }
+    setMonth(m => m - 1)
     setSelectedDate(null)
   }
 
@@ -39,9 +40,10 @@ export const MaintenanceCalendar = ({ events, onEventClick, onDateClick }: Maint
     if (month === 11) {
       setYear(y => y + 1)
       setMonth(0)
-    } else {
-      setMonth(m => m + 1)
+      setSelectedDate(null)
+      return
     }
+    setMonth(m => m + 1)
     setSelectedDate(null)
   }
 
