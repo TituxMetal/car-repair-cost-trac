@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { CurrencyDollar, MagnifyingGlass, PencilSimple, Trash, Funnel } from '@phosphor-icons/react'
+import { CurrencyDollarIcon, MagnifyingGlassIcon, PencilSimpleIcon, TrashIcon, FunnelIcon } from '@phosphor-icons/react'
 
 interface ExpenseHistoryProps {
   expenses: Expense[]
@@ -91,7 +91,7 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CurrencyDollar className="text-accent" size={24} />
+            <CurrencyDollarIcon className="text-accent" size={24} />
             <CardTitle>Expense History</CardTitle>
           </div>
           <div className="text-right">
@@ -103,7 +103,7 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
       <CardContent className="space-y-4">
         {/* Search */}
         <div className="relative">
-          <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
           <Input
             className="pl-9"
             placeholder="Search by event, garage, description or date…"
@@ -123,7 +123,7 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
             aria-expanded={filtersOpen}
             aria-controls="expense-filters"
           >
-            <Funnel size={16} />
+            <FunnelIcon size={16} />
             Filters
           </Button>
 
@@ -177,13 +177,13 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
 
         {expenses.length === 0 ? (
           <div className="text-center py-12">
-            <CurrencyDollar className="text-muted-foreground mx-auto mb-4" size={48} />
+            <CurrencyDollarIcon className="text-muted-foreground mx-auto mb-4" size={48} />
             <h3 className="text-lg font-medium mb-2">No expenses recorded</h3>
             <p className="text-muted-foreground">Add expenses to track your maintenance costs</p>
           </div>
         ) : filteredExpenses.length === 0 ? (
           <div className="text-center py-12">
-            <MagnifyingGlass className="text-muted-foreground mx-auto mb-4" size={48} />
+            <MagnifyingGlassIcon className="text-muted-foreground mx-auto mb-4" size={48} />
             <h3 className="text-lg font-medium mb-2">No results</h3>
             <p className="text-muted-foreground">Try adjusting your search or filters</p>
           </div>
@@ -222,7 +222,7 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
                                 onClick={() => onEdit(expense)}
                                 aria-label="Edit expense"
                               >
-                                <PencilSimple size={16} />
+                                <PencilSimpleIcon size={16} />
                               </Button>
                             )}
                             {onDelete && (
@@ -232,7 +232,7 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
                                 onClick={() => handleDelete(expense)}
                                 aria-label="Delete expense"
                               >
-                                <Trash size={16} className="text-destructive" />
+                                <TrashIcon size={16} className="text-destructive" />
                               </Button>
                             )}
                           </div>
@@ -263,7 +263,7 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
                             onClick={() => onEdit(expense)}
                             aria-label="Edit expense"
                           >
-                            <PencilSimple size={16} />
+                            <PencilSimpleIcon size={16} />
                           </Button>
                         )}
                         {onDelete && (
@@ -273,7 +273,7 @@ export const ExpenseHistory = ({ expenses, events, onEdit, onDelete }: ExpenseHi
                             onClick={() => handleDelete(expense)}
                             aria-label="Delete expense"
                           >
-                            <Trash size={16} className="text-destructive" />
+                            <TrashIcon size={16} className="text-destructive" />
                           </Button>
                         )}
                       </div>

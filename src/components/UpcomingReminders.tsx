@@ -3,7 +3,7 @@ import { maintenanceCategoryLabels } from '@/lib/helpers'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowsClockwise, Clock, Gauge, Plus } from '@phosphor-icons/react'
+import { ArrowsClockwiseIcon, ClockIcon, GaugeIcon, PlusIcon } from '@phosphor-icons/react'
 
 interface UpcomingRemindersProps {
   reminders: RecurringReminder[]
@@ -86,16 +86,16 @@ export const UpcomingReminders = ({ reminders, vehicle, onAddReminder }: Upcomin
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <ArrowsClockwise size={20} />
+            <ArrowsClockwiseIcon size={20} />
             Upcoming Reminders
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-6">
-            <ArrowsClockwise className="mx-auto mb-3 text-muted-foreground" size={40} />
+            <ArrowsClockwiseIcon className="mx-auto mb-3 text-muted-foreground" size={40} />
             <p className="text-sm text-muted-foreground mb-3">No recurring reminders set up</p>
             <Button size="sm" onClick={onAddReminder}>
-              <Plus size={16} />
+              <PlusIcon size={16} />
               Create Reminder
             </Button>
           </div>
@@ -109,7 +109,7 @@ export const UpcomingReminders = ({ reminders, vehicle, onAddReminder }: Upcomin
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <ArrowsClockwise size={20} />
+            <ArrowsClockwiseIcon size={20} />
             Upcoming Reminders
           </CardTitle>
         </CardHeader>
@@ -126,7 +126,7 @@ export const UpcomingReminders = ({ reminders, vehicle, onAddReminder }: Upcomin
     <Card>
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
-          <ArrowsClockwise size={20} />
+          <ArrowsClockwiseIcon size={20} />
           Upcoming Reminders
         </CardTitle>
       </CardHeader>
@@ -144,7 +144,7 @@ export const UpcomingReminders = ({ reminders, vehicle, onAddReminder }: Upcomin
               {daysSinceLast !== undefined && reminder.timeInterval && reminder.timeUnit && (
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <Clock size={14} />
+                    <ClockIcon size={14} />
                     <span>Time-based</span>
                   </div>
                   <span className={daysSinceLast >= (reminder.timeInterval * (TIME_UNIT_DAYS[reminder.timeUnit ?? ''] ?? 1)) ? 'text-destructive font-medium' : 'text-foreground'}>
@@ -156,7 +156,7 @@ export const UpcomingReminders = ({ reminders, vehicle, onAddReminder }: Upcomin
               {mileageSinceLast !== undefined && reminder.mileageInterval && (
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <Gauge size={14} />
+                    <GaugeIcon size={14} />
                     <span>Mileage-based</span>
                   </div>
                   <span className={mileageSinceLast >= reminder.mileageInterval ? 'text-destructive font-medium' : 'text-foreground'}>

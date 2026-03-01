@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { Car, PencilSimple, Gauge, CaretDown, CaretUp } from '@phosphor-icons/react'
+import { CarIcon, PencilSimpleIcon, GaugeIcon, CaretDownIcon, CaretUpIcon } from '@phosphor-icons/react'
 
 interface VehicleProfileProps {
   vehicle: Vehicle
@@ -59,11 +59,11 @@ export const VehicleProfile = ({ vehicle, onEdit }: VehicleProfileProps) => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Car className="text-accent" size={24} />
+            <CarIcon className="text-accent" size={24} />
             <CardTitle>Vehicle Profile</CardTitle>
           </div>
           <Button variant="secondary" size="sm" onClick={onEdit} className="h-11 w-11 min-h-11 transition-all duration-150" aria-label="Edit vehicle" title="Edit vehicle">
-            <PencilSimple size={16} />
+            <PencilSimpleIcon size={16} />
           </Button>
         </div>
       </CardHeader>
@@ -80,7 +80,7 @@ export const VehicleProfile = ({ vehicle, onEdit }: VehicleProfileProps) => {
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Gauge className="text-accent" size={18} />
+            <GaugeIcon className="text-accent" size={18} />
             <p className="font-medium">{formatMileage(vehicle.currentOdometer)}</p>
           </div>
         </div>
@@ -89,7 +89,7 @@ export const VehicleProfile = ({ vehicle, onEdit }: VehicleProfileProps) => {
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" aria-label={detailsOpen ? 'Collapse vehicle details' : 'Expand vehicle details'} className="w-full flex items-center justify-between h-11 min-h-11 transition-all duration-150 md:hidden">
               <span className="text-sm text-muted-foreground">Details</span>
-              {detailsOpen ? <CaretUp size={14} /> : <CaretDown size={14} />}
+              {detailsOpen ? <CaretUpIcon size={14} /> : <CaretDownIcon size={14} />}
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="md:hidden pt-2">

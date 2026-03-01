@@ -1,9 +1,9 @@
-import { useState } from 'react'
-import { MaintenanceEvent } from '@/lib/types'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { CaretLeft, CaretRight, CalendarBlank } from '@phosphor-icons/react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { MaintenanceEvent } from '@/lib/types'
+import { CalendarBlankIcon, CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react'
+import { useState } from 'react'
 
 interface MaintenanceCalendarProps {
   events: MaintenanceEvent[]
@@ -19,7 +19,11 @@ const toDateKey = (year: number, month: number, day: number): string => {
   return `${year}-${m}-${d}`
 }
 
-export const MaintenanceCalendar = ({ events, onEventClick, onDateClick }: MaintenanceCalendarProps) => {
+export const MaintenanceCalendar = ({
+  events,
+  onEventClick,
+  onDateClick
+}: MaintenanceCalendarProps) => {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
@@ -69,9 +73,12 @@ export const MaintenanceCalendar = ({ events, onEventClick, onDateClick }: Maint
     onDateClick?.(key)
   }
 
-  const selectedEvents = selectedDate ? (eventsByDate.get(selectedDate) || []) : []
+  const selectedEvents = selectedDate ? eventsByDate.get(selectedDate) || [] : []
 
-  const monthLabel = new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  const monthLabel = new Date(year, month).toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric'
+  })
 
   // Build calendar grid cells (blanks + days)
   const totalCells = Math.ceil((firstDayOfWeek + daysInMonth) / 7) * 7
@@ -83,37 +90,37 @@ export const MaintenanceCalendar = ({ events, onEventClick, onDateClick }: Maint
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CalendarBlank className="text-accent" size={24} />
+        <div className='flex items-center justify-between'>
+          <div className='flex items-center gap-2'>
+            <CalendarBlankIcon className='text-accent' size={24} />
             <CardTitle>Maintenance Calendar</CardTitle>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={prevMonth} aria-label="Previous month">
-              <CaretLeft size={18} />
+          <div className='flex items-center gap-2'>
+            <Button variant='ghost' size='icon' onClick={prevMonth} aria-label='Previous month'>
+              <CaretLeftIcon size={18} />
             </Button>
-            <span className="text-sm font-medium min-w-[140px] text-center">{monthLabel}</span>
-            <Button variant="ghost" size="icon" onClick={nextMonth} aria-label="Next month">
-              <CaretRight size={18} />
+            <span className='text-sm font-medium min-w-35 text-center'>{monthLabel}</span>
+            <Button variant='ghost' size='icon' onClick={nextMonth} aria-label='Next month'>
+              <CaretRightIcon size={18} />
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className='space-y-4'>
         {/* Day name headers */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className='grid grid-cols-7 gap-1'>
           {DAY_NAMES.map(name => (
-            <div key={name} className="text-center text-xs text-muted-foreground font-medium py-1">
+            <div key={name} className='text-center text-xs text-muted-foreground font-medium py-1'>
               {name}
             </div>
           ))}
         </div>
 
         {/* Calendar grid */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className='grid grid-cols-7 gap-1'>
           {cells.map((day, idx) => {
             if (!day) {
-              return <div key={`blank-${idx}`} className="h-10" />
+              return <div key={`blank-${idx}`} className='h-10' />
             }
             const key = toDateKey(year, month, day)
             const dayEvents = eventsByDate.get(key) || []
@@ -130,9 +137,9 @@ export const MaintenanceCalendar = ({ events, onEventClick, onDateClick }: Maint
                   isSelected
                     ? 'bg-primary text-primary-foreground'
                     : isToday
-                    ? 'bg-accent text-accent-foreground'
-                    : 'hover:bg-muted',
-                  hasEvents && !isSelected ? 'font-semibold' : '',
+                      ? 'bg-accent text-accent-foreground'
+                      : 'hover:bg-muted',
+                  hasEvents && !isSelected ? 'font-semibold' : ''
                 ].join(' ')}
               >
                 {day}
@@ -140,7 +147,7 @@ export const MaintenanceCalendar = ({ events, onEventClick, onDateClick }: Maint
                   <span
                     className={[
                       'absolute bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full',
-                      isSelected ? 'bg-primary-foreground' : 'bg-accent',
+                      isSelected ? 'bg-primary-foreground' : 'bg-accent'
                     ].join(' ')}
                   />
                 )}
@@ -151,28 +158,28 @@ export const MaintenanceCalendar = ({ events, onEventClick, onDateClick }: Maint
 
         {/* Selected day events */}
         {selectedDate && (
-          <div className="border-t border-border pt-4 space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">
+          <div className='border-t border-border pt-4 space-y-2'>
+            <p className='text-sm font-medium text-muted-foreground'>
               {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', {
                 weekday: 'long',
                 month: 'long',
-                day: 'numeric',
+                day: 'numeric'
               })}
             </p>
             {selectedEvents.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No events scheduled</p>
+              <p className='text-sm text-muted-foreground'>No events scheduled</p>
             ) : (
-              <div className="space-y-2">
+              <div className='space-y-2'>
                 {selectedEvents.map(event => (
                   <button
                     key={event.id}
                     onClick={() => onEventClick(event)}
-                    className="w-full text-left flex items-center justify-between p-2 rounded-md hover:bg-muted transition-colors"
+                    className='w-full text-left flex items-center justify-between p-2 rounded-md hover:bg-muted transition-colors'
                   >
-                    <span className="text-sm font-medium truncate">{event.title}</span>
+                    <span className='text-sm font-medium truncate'>{event.title}</span>
                     <Badge
                       variant={event.status === 'completed' ? 'secondary' : 'outline'}
-                      className="ml-2 shrink-0 text-xs"
+                      className='ml-2 shrink-0 text-xs'
                     >
                       {event.status}
                     </Badge>
