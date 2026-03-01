@@ -124,15 +124,16 @@ maintenanceRouter.put(
     const id = c.req.param('id')
     const data = c.req.valid('json')
     
-    try {
-      const event = await prisma.maintenanceEvent.update({
-        where: { id },
-        data,
-      })
-      return c.json(event)
-    } catch (_error) {
+    const existing = await prisma.maintenanceEvent.findUnique({ where: { id } })
+    if (!existing) {
       return c.json({ error: 'Maintenance event not found' }, 404)
     }
+
+    const event = await prisma.maintenanceEvent.update({
+      where: { id },
+      data,
+    })
+    return c.json(event)
   }
 )
 
@@ -174,17 +175,24 @@ maintenanceRouter.patch(
         
         const today = new Date()
         
-        if (currentEvent.recurrenceType === 'weekly') {
-          const nextDate = new Date(today)
-          nextDate.setDate(nextDate.getDate() + (7 * currentEvent.recurrenceValue))
-          nextScheduledDate = nextDate.toISOString().split('T')[0]
-        } else if (currentEvent.recurrenceType === 'monthly') {
-          const nextDate = new Date(today)
-          nextDate.setMonth(nextDate.getMonth() + currentEvent.recurrenceValue)
-          nextScheduledDate = nextDate.toISOString().split('T')[0]
-        } else if (currentEvent.recurrenceType === 'mileage' && completedMileage) {
-          nextScheduledMileage = completedMileage + currentEvent.recurrenceValue
+        const recurrenceHandlers: Record<string, () => void> = {
+          weekly: () => {
+            const nextDate = new Date(today)
+            nextDate.setDate(nextDate.getDate() + (7 * currentEvent.recurrenceValue))
+            nextScheduledDate = nextDate.toISOString().split('T')[0]
+          },
+          monthly: () => {
+            const nextDate = new Date(today)
+            nextDate.setMonth(nextDate.getMonth() + currentEvent.recurrenceValue)
+            nextScheduledDate = nextDate.toISOString().split('T')[0]
+          },
+          mileage: () => {
+            if (completedMileage) {
+              nextScheduledMileage = completedMileage + currentEvent.recurrenceValue
+            }
+          },
         }
+        recurrenceHandlers[currentEvent.recurrenceType]?.()
         
         nextEvent = await prisma.maintenanceEvent.create({
           data: {
@@ -355,12 +363,13 @@ maintenanceRouter.post('/migrate-recurring/:vehicleId', async (c) => {
 maintenanceRouter.delete('/:id', async (c) => {
   const id = c.req.param('id')
   
-  try {
-    await prisma.maintenanceEvent.delete({
-      where: { id },
-    })
-    return c.json({ success: true })
-  } catch (_error) {
+  const existing = await prisma.maintenanceEvent.findUnique({ where: { id } })
+  if (!existing) {
     return c.json({ error: 'Maintenance event not found' }, 404)
   }
+
+  await prisma.maintenanceEvent.delete({
+    where: { id },
+  })
+  return c.json({ success: true })
 })

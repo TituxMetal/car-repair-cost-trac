@@ -63,28 +63,24 @@ expensesRouter.put(
     const id = c.req.param('id')
     const data = c.req.valid('json')
     
-    try {
-      const existing = await prisma.expense.findUnique({ where: { id } })
-      if (!existing) {
-        return c.json({ error: 'Expense not found' }, 404)
-      }
-      
-      const partsCost = data.partsCost ?? existing.partsCost
-      const laborCost = data.laborCost ?? existing.laborCost
-      const otherCost = data.otherCost ?? existing.otherCost
-      const totalCost = partsCost + laborCost + otherCost
-      
-      const expense = await prisma.expense.update({
-        where: { id },
-        data: {
-          ...data,
-          totalCost,
-        },
-      })
-      return c.json(expense)
-    } catch (_error) {
+    const existing = await prisma.expense.findUnique({ where: { id } })
+    if (!existing) {
       return c.json({ error: 'Expense not found' }, 404)
     }
+    
+    const partsCost = data.partsCost ?? existing.partsCost
+    const laborCost = data.laborCost ?? existing.laborCost
+    const otherCost = data.otherCost ?? existing.otherCost
+    const totalCost = partsCost + laborCost + otherCost
+    
+    const expense = await prisma.expense.update({
+      where: { id },
+      data: {
+        ...data,
+        totalCost,
+      },
+    })
+    return c.json(expense)
   }
 )
 
@@ -92,14 +88,15 @@ expensesRouter.put(
 expensesRouter.delete('/:id', async (c) => {
   const id = c.req.param('id')
   
-  try {
-    await prisma.expense.delete({
-      where: { id },
-    })
-    return c.json({ success: true })
-  } catch (_error) {
+  const existing = await prisma.expense.findUnique({ where: { id } })
+  if (!existing) {
     return c.json({ error: 'Expense not found' }, 404)
   }
+
+  await prisma.expense.delete({
+    where: { id },
+  })
+  return c.json({ success: true })
 })
 
 // Get total spending stats for a vehicle
@@ -144,7 +141,9 @@ expensesRouter.get('/stats/:vehicleId', async (c) => {
       const endYear = month === 12 ? year + 1 : year
       const endMonth = month === 12 ? 1 : month + 1
       endLt = `${endYear}-${String(endMonth).padStart(2, '0')}-01`
-    } else {
+    }
+
+    if (period === 'yearly') {
       startGte = `${year}-01-01`
       endLt = `${year + 1}-01-01`
     }

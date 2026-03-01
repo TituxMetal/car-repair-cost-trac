@@ -56,12 +56,13 @@ remindersRouter.put(
     const id = c.req.param('id')
     const data = c.req.valid('json')
 
-    try {
-      const reminder = await prisma.recurringReminder.update({ where: { id }, data })
-      return c.json(reminder)
-    } catch (_error) {
+    const existing = await prisma.recurringReminder.findUnique({ where: { id } })
+    if (!existing) {
       return c.json({ error: 'Reminder not found' }, 404)
     }
+
+    const reminder = await prisma.recurringReminder.update({ where: { id }, data })
+    return c.json(reminder)
   }
 )
 
@@ -118,12 +119,13 @@ remindersRouter.patch(
 remindersRouter.delete('/:id', async (c) => {
   const id = c.req.param('id')
 
-  try {
-    await prisma.recurringReminder.delete({ where: { id } })
-    return c.json({ success: true })
-  } catch (_error) {
+  const existing = await prisma.recurringReminder.findUnique({ where: { id } })
+  if (!existing) {
     return c.json({ error: 'Reminder not found' }, 404)
   }
+
+  await prisma.recurringReminder.delete({ where: { id } })
+  return c.json({ success: true })
 })
 
 // POST /:vehicleId/generate-events — auto-create MaintenanceEvents from active reminders
@@ -162,29 +164,23 @@ remindersRouter.post('/:vehicleId/generate-events', async (c) => {
       let scheduledDate: string | null = null
       let scheduledMileage: number | null = null
 
-      const today = new Date()
+      const todayStr = new Date().toISOString().split('T')[0]
 
       if (reminder.recurrenceType === 'time' || reminder.recurrenceType === 'both') {
         if (reminder.timeInterval && reminder.timeUnit) {
-          let base = today
-          if (reminder.lastCompletedDate) {
-            const parsed = new Date(reminder.lastCompletedDate)
-            if (!isNaN(parsed.getTime())) {
-              base = parsed
-            }
-          }
-          const next = new Date(base)
-
-          if (reminder.timeUnit === 'days') {
-            next.setDate(next.getDate() + reminder.timeInterval)
-          } else if (reminder.timeUnit === 'weeks') {
-            next.setDate(next.getDate() + reminder.timeInterval * 7)
-          } else if (reminder.timeUnit === 'months') {
-            next.setMonth(next.getMonth() + reminder.timeInterval)
-          } else if (reminder.timeUnit === 'years') {
-            next.setFullYear(next.getFullYear() + reminder.timeInterval)
+          const addInterval: Record<string, (d: Date, n: number) => void> = {
+            days: (d, n) => d.setUTCDate(d.getUTCDate() + n),
+            weeks: (d, n) => d.setUTCDate(d.getUTCDate() + n * 7),
+            months: (d, n) => d.setUTCMonth(d.getUTCMonth() + n),
+            years: (d, n) => d.setUTCFullYear(d.getUTCFullYear() + n),
           }
 
+          const baseStr = reminder.lastCompletedDate || todayStr
+          const next = new Date(baseStr + 'T00:00:00Z')
+          const adder = addInterval[reminder.timeUnit ?? '']
+          if (adder && reminder.timeInterval) {
+            adder(next, reminder.timeInterval)
+          }
           scheduledDate = next.toISOString().split('T')[0]
         }
       }
