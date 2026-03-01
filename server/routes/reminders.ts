@@ -177,6 +177,10 @@ remindersRouter.post('/:vehicleId/generate-events', async (c) => {
 
           const baseStr = reminder.lastCompletedDate || todayStr
           const next = new Date(baseStr + 'T00:00:00Z')
+          if (isNaN(next.getTime())) {
+            const fallback = new Date(todayStr + 'T00:00:00Z')
+            next.setTime(fallback.getTime())
+          }
           const adder = addInterval[reminder.timeUnit ?? '']
           if (adder && reminder.timeInterval) {
             adder(next, reminder.timeInterval)

@@ -48,11 +48,13 @@ app.route('/api', api)
 // Serve static files from the built frontend
 const distPath = join(process.cwd(), 'dist')
 
-if (!existsSync(distPath)) {
+const hasDist = existsSync(distPath)
+
+if (!hasDist) {
   console.log('⚠️ No dist folder found, serving API only')
 }
 
-if (existsSync(distPath)) {
+if (hasDist) {
   console.log('📁 Serving frontend from:', distPath)
   
   // Serve static assets (JS, CSS, images)
