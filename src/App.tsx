@@ -24,6 +24,7 @@ import {
   useUpdateReminder,
   useToggleReminder,
   useDeleteReminder,
+  useResetDemoData,
 } from '@/hooks/use-api'
 import { Toaster, toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -42,7 +43,18 @@ import { ChecksHistory } from '@/components/ChecksHistory'
 import { RecurringReminderList } from '@/components/RecurringReminderList'
 import { RecurringReminderForm } from '@/components/RecurringReminderForm'
 import { VehicleSelector } from '@/components/VehicleSelector'
-import { Plus, Car, Spinner } from '@phosphor-icons/react'
+import { PlusIcon, CarIcon, SpinnerIcon, ArrowCounterClockwiseIcon } from '@phosphor-icons/react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 type DialogMode = 
   | { type: 'none' }
@@ -94,6 +106,7 @@ const App = () => {
   const updateReminder = useUpdateReminder()
   const toggleReminder = useToggleReminder()
   const deleteReminder = useDeleteReminder()
+  const resetDemoData = useResetDemoData()
 
   // Helper to show detailed error messages
   const showError = (error: unknown, fallbackMessage: string) => {
@@ -272,13 +285,23 @@ const App = () => {
     }
   }
 
+  const handleResetDemo = async () => {
+    try {
+      const result = await resetDemoData.mutateAsync()
+      setSelectedVehicleId(result.vehicle.id)
+      toast.success('Database reset to demo data')
+    } catch (error) {
+      showError(error, 'Failed to reset demo data')
+    }
+  }
+
   // Loading state
   if (vehiclesLoading) {
     return (
       <div className="min-h-screen bg-background text-foreground p-4 flex items-center justify-center">
         <Toaster position="top-center" theme="dark" richColors />
         <div className="text-center">
-          <Spinner className="animate-spin mx-auto mb-4" size={48} />
+          <SpinnerIcon className="animate-spin mx-auto mb-4" size={48} />
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -292,7 +315,7 @@ const App = () => {
         <Toaster position="top-center" theme="dark" richColors />
         <div className="w-full max-w-2xl">
           <div className="text-center mb-8">
-            <Car className="text-destructive mx-auto mb-4" size={64} />
+            <CarIcon className="text-destructive mx-auto mb-4" size={64} />
             <h1 className="text-3xl font-semibold mb-2">Connection Error</h1>
             <p className="text-muted-foreground mb-4">
               Could not connect to the server. Make sure the backend is running on port 3001.
@@ -316,7 +339,7 @@ const App = () => {
         <Toaster position="top-center" theme="dark" richColors />
         <div className="w-full max-w-2xl">
           <div className="text-center mb-8">
-            <Car className="text-accent mx-auto mb-4" size={64} />
+            <CarIcon className="text-accent mx-auto mb-4" size={64} />
             <h1 className="text-3xl font-semibold mb-2">Car Maintenance Tracker</h1>
             <p className="text-muted-foreground">
               Start by adding your vehicle to track maintenance and costs
@@ -338,13 +361,40 @@ const App = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Car className="text-accent" size={32} />
+              <CarIcon className="text-accent" size={32} />
               <div>
                 <h1 className="text-xl font-semibold">Car Maintenance Tracker</h1>
                 <p className="text-xs text-muted-foreground">Track maintenance and costs</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={resetDemoData.isPending}>
+                    {resetDemoData.isPending ? (
+                      <SpinnerIcon className="animate-spin" size={16} />
+                    ) : (
+                      <ArrowCounterClockwiseIcon size={16} />
+                    )}
+                    Reset Demo
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Reset to demo data?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will delete all existing data and replace it with demo data.
+                      This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleResetDemo}>
+                      Reset
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
               {vehicles && vehicles.length > 0 && (
                 <VehicleSelector
                   vehicles={vehicles}
@@ -358,7 +408,7 @@ const App = () => {
                 size="sm"
                 onClick={() => setDialogMode({ type: 'vehicle' })}
               >
-                <Plus size={16} />
+                <PlusIcon size={16} />
                 Add Vehicle
               </Button>
             </div>
@@ -397,13 +447,13 @@ const App = () => {
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">Upcoming Maintenance</h2>
                 <Button onClick={() => setDialogMode({ type: 'maintenance' })}>
-                  <Plus size={18} />
+                  <PlusIcon size={18} />
                   Schedule
                 </Button>
               </div>
               {maintenanceLoading ? (
                 <div className="text-center py-8">
-                  <Spinner className="animate-spin mx-auto" size={32} />
+                  <SpinnerIcon className="animate-spin mx-auto" size={32} />
                 </div>
               ) : (
                 <MaintenanceTimeline
@@ -421,7 +471,7 @@ const App = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Maintenance Schedule</h2>
               <Button onClick={() => setDialogMode({ type: 'maintenance' })}>
-                <Plus size={18} />
+                <PlusIcon size={18} />
                 Add Event
               </Button>
             </div>
@@ -431,7 +481,7 @@ const App = () => {
             />
             {maintenanceLoading ? (
               <div className="text-center py-8">
-                <Spinner className="animate-spin mx-auto" size={32} />
+                <SpinnerIcon className="animate-spin mx-auto" size={32} />
               </div>
             ) : (
               <MaintenanceTimeline
@@ -448,13 +498,13 @@ const App = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">All Expenses</h2>
               <Button onClick={() => setDialogMode({ type: 'expense' })}>
-                <Plus size={18} />
+                <PlusIcon size={18} />
                 Add Expense
               </Button>
             </div>
             {expensesLoading ? (
               <div className="text-center py-8">
-                <Spinner className="animate-spin mx-auto" size={32} />
+                <SpinnerIcon className="animate-spin mx-auto" size={32} />
               </div>
             ) : (
               <ExpenseHistory
@@ -470,7 +520,7 @@ const App = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Recurring Reminders</h2>
               <Button onClick={() => setDialogMode({ type: 'reminder' })}>
-                <Plus size={18} />
+                <PlusIcon size={18} />
                 Add Reminder
               </Button>
             </div>
