@@ -33,20 +33,6 @@ export const RecurringReminderList = ({
     )
   }
 
-  const _getRecurrenceDescription = (reminder: RecurringReminder): string => {
-    const parts: string[] = []
-    
-    if (reminder.recurrenceType === 'time' || reminder.recurrenceType === 'both') {
-      parts.push(`Every ${reminder.timeInterval} ${reminder.timeUnit}`)
-    }
-    
-    if (reminder.recurrenceType === 'mileage' || reminder.recurrenceType === 'both') {
-      parts.push(`Every ${reminder.mileageInterval?.toLocaleString()} km`)
-    }
-    
-    return parts.join(' or ')
-  }
-
   return (
     <div className="space-y-3">
       {reminders.map((reminder) => (

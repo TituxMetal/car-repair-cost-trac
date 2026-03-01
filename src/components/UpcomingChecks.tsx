@@ -23,7 +23,7 @@ const categoryIcons: Record<string, string> = {
   'lights-check': '💡',
 }
 
-export function UpcomingChecks({ vehicleId }: UpcomingChecksProps) {
+export const UpcomingChecks = ({ vehicleId }: UpcomingChecksProps) => {
   const queryClient = useQueryClient()
   const [isOpen, setIsOpen] = useState(true)
   
@@ -40,10 +40,10 @@ export function UpcomingChecks({ vehicleId }: UpcomingChecksProps) {
       queryClient.invalidateQueries({ queryKey: ['maintenance'] })
       refetch()
       if (data.next) {
-        toast.success(`✅ Done! Next check scheduled for ${formatDate(data.next.scheduledDate!)}`)
-      } else {
-        toast.success('✅ Check completed!')
+        toast.success(`Done! Next check scheduled for ${formatDate(data.next.scheduledDate!)}`)
+        return
       }
+      toast.success('Check completed!')
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : 'Failed to complete check')
@@ -58,12 +58,6 @@ export function UpcomingChecks({ vehicleId }: UpcomingChecksProps) {
     if (!event.scheduledDate) return false
     const today = new Date().toISOString().split('T')[0]
     return event.scheduledDate < today
-  }
-
-  const _isDueToday = (event: MaintenanceEvent) => {
-    if (!event.scheduledDate) return false
-    const today = new Date().toISOString().split('T')[0]
-    return event.scheduledDate === today
   }
 
   const isDueThisWeek = (event: MaintenanceEvent) => {

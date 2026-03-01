@@ -18,6 +18,13 @@ interface ReminderStatus {
   isDueSoon: boolean
 }
 
+const TIME_UNIT_DAYS: Record<string, number> = {
+  days: 1,
+  weeks: 7,
+  months: 30,
+  years: 365,
+}
+
 export const UpcomingReminders = ({ reminders, vehicle, onAddReminder }: UpcomingRemindersProps) => {
   const activeReminders = reminders.filter(r => r.isActive)
 
@@ -29,22 +36,21 @@ export const UpcomingReminders = ({ reminders, vehicle, onAddReminder }: Upcomin
       let mileageSinceLast: number | undefined
       let isDueSoon = false
 
+      if (!reminder.lastCompletedDate) {
+        isDueSoon = true
+      }
+
       if (reminder.recurrenceType === 'time' || reminder.recurrenceType === 'both') {
         if (reminder.lastCompletedDate && reminder.timeInterval && reminder.timeUnit) {
           const lastDate = new Date(reminder.lastCompletedDate)
           const diffTime = now.getTime() - lastDate.getTime()
           daysSinceLast = Math.floor(diffTime / (1000 * 60 * 60 * 24))
 
-          let intervalInDays = reminder.timeInterval
-          if (reminder.timeUnit === 'weeks') intervalInDays *= 7
-          if (reminder.timeUnit === 'months') intervalInDays *= 30
-          if (reminder.timeUnit === 'years') intervalInDays *= 365
+          const intervalInDays = reminder.timeInterval * (TIME_UNIT_DAYS[reminder.timeUnit ?? ''] ?? 1)
 
           if (daysSinceLast >= intervalInDays * 0.8) {
             isDueSoon = true
           }
-        } else if (!reminder.lastCompletedDate) {
-          isDueSoon = true
         }
       }
 
@@ -137,8 +143,8 @@ export const UpcomingReminders = ({ reminders, vehicle, onAddReminder }: Upcomin
                     <Clock size={14} />
                     <span>Time-based</span>
                   </div>
-                  <span className={daysSinceLast >= (reminder.timeInterval * (reminder.timeUnit === 'days' ? 1 : reminder.timeUnit === 'weeks' ? 7 : reminder.timeUnit === 'months' ? 30 : 365)) ? 'text-destructive font-medium' : 'text-foreground'}>
-                    {daysSinceLast} / {reminder.timeInterval * (reminder.timeUnit === 'days' ? 1 : reminder.timeUnit === 'weeks' ? 7 : reminder.timeUnit === 'months' ? 30 : 365)} days
+                  <span className={daysSinceLast >= (reminder.timeInterval * (TIME_UNIT_DAYS[reminder.timeUnit ?? ''] ?? 1)) ? 'text-destructive font-medium' : 'text-foreground'}>
+                    {daysSinceLast} / {reminder.timeInterval * (TIME_UNIT_DAYS[reminder.timeUnit ?? ''] ?? 1)} days
                   </span>
                 </div>
               )}
