@@ -7,6 +7,7 @@ import { maintenanceRouter } from './routes/maintenance'
 import { expensesRouter } from './routes/expenses'
 import { budgetsRouter } from './routes/budgets'
 import { remindersRouter } from './routes/reminders'
+import { demoRouter } from './routes/demo'
 import { prisma, initDatabase } from './db/prisma'
 import { existsSync } from 'fs'
 import { join } from 'path'
@@ -42,6 +43,7 @@ api.route('/maintenance', maintenanceRouter)
 api.route('/expenses', expensesRouter)
 api.route('/budgets', budgetsRouter)
 api.route('/reminders', remindersRouter)
+api.route('/demo', demoRouter)
 
 app.route('/api', api)
 
