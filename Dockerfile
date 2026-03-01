@@ -55,6 +55,9 @@ if [ -n "$DB_PATH" ] && [ ! -f "$DB_PATH" ]; then\n\
   cp /app/template.db "$DB_PATH"\n\
   echo "✅ Database initialized at $DB_PATH"\n\
 fi\n\
+echo "🔄 Running database migrations..."\n\
+bunx --bun prisma migrate deploy\n\
+echo "✅ Migrations complete"\n\
 exec "$@"' > /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 8080
