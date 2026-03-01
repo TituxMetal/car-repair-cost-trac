@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Spinner } from '@phosphor-icons/react'
+import { SpinnerIcon } from '@phosphor-icons/react'
 
 interface VehicleFormProps {
   vehicle?: Vehicle
@@ -188,7 +188,7 @@ export const VehicleForm = ({ vehicle, onSave, onCancel, isSubmitting }: Vehicle
             <Button type="submit" className="flex-1 h-11 transition-all duration-150" size="lg" disabled={isSubmitting || odometerError}>
               {isSubmitting ? (
                 <>
-                  <Spinner className="animate-spin mr-2 h-4 w-4" />
+                  <SpinnerIcon className="animate-spin mr-2 h-4 w-4" />
                   Saving...
                 </>
               ) : (

@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { ArrowsClockwise, Trash, PencilSimple, Clock, Gauge } from '@phosphor-icons/react'
+import { ArrowsClockwiseIcon, TrashIcon, PencilSimpleIcon, ClockIcon, GaugeIcon } from '@phosphor-icons/react'
 
 interface RecurringReminderListProps {
   reminders: RecurringReminder[]
@@ -23,7 +23,7 @@ export const RecurringReminderList = ({
     return (
       <Card className="bg-muted/30">
         <CardContent className="py-8 text-center">
-          <ArrowsClockwise className="mx-auto mb-3 text-muted-foreground" size={48} />
+          <ArrowsClockwiseIcon className="mx-auto mb-3 text-muted-foreground" size={48} />
           <p className="text-muted-foreground">No recurring reminders set up yet</p>
           <p className="text-sm text-muted-foreground mt-1">
             Create reminders to automatically track maintenance
@@ -50,13 +50,13 @@ export const RecurringReminderList = ({
                 <div className="flex items-center gap-3 text-sm text-muted-foreground mb-2">
                   {(reminder.recurrenceType === 'time' || reminder.recurrenceType === 'both') && (
                     <div className="flex items-center gap-1">
-                      <Clock size={14} />
+                      <ClockIcon size={14} />
                       <span>Every {reminder.timeInterval} {reminder.timeUnit}</span>
                     </div>
                   )}
                   {(reminder.recurrenceType === 'mileage' || reminder.recurrenceType === 'both') && (
                     <div className="flex items-center gap-1">
-                      <Gauge size={14} />
+                      <GaugeIcon size={14} />
                       <span>Every {reminder.mileageInterval?.toLocaleString()} km</span>
                     </div>
                   )}
@@ -86,14 +86,14 @@ export const RecurringReminderList = ({
                   variant="ghost"
                   onClick={() => onEdit(reminder)}
                 >
-                  <PencilSimple size={18} />
+                  <PencilSimpleIcon size={18} />
                 </Button>
                 <Button
                   size="icon"
                   variant="ghost"
                   onClick={() => onDelete(reminder.id)}
                 >
-                  <Trash size={18} />
+                  <TrashIcon size={18} />
                 </Button>
               </div>
             </div>

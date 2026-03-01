@@ -14,12 +14,7 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
-/**
- * Initialize the database by ensuring the directory exists.
- * In production, we rely on the database schema being set up during Docker build.
- * The Prisma client will create the database file on first connection if it doesn't exist.
- */
-export async function initDatabase(): Promise<void> {
+export const initDatabase = async (): Promise<void> => {
   // Extract file path from DATABASE_URL (format: file:/path/to/db)
   const urlMatch = dbUrl.match(/^file:(.+)$/)
   if (urlMatch) {

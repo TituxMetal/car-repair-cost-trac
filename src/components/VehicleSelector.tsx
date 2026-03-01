@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus } from '@phosphor-icons/react'
+import { PlusIcon } from '@phosphor-icons/react'
 
 interface VehicleSelectorProps {
   vehicles: Vehicle[]
@@ -41,7 +41,7 @@ export const VehicleSelector = ({ vehicles, selectedId, onSelect, onAddNew }: Ve
         <SelectSeparator />
         <SelectItem value={ADD_NEW_VALUE}>
           <span className="flex items-center gap-2">
-            <Plus size={14} />
+            <PlusIcon size={14} />
             Add Vehicle
           </span>
         </SelectItem>
